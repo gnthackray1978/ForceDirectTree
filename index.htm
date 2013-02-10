@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Springy - A force directed graph layout algorithm in JavaScript.</title>
+  <link href='http://fonts.googleapis.com/css?family=IM+Fell+English+SC|IM+Fell+English:400,400italic' rel='stylesheet' type='text/css'>
+  <script src="springy.js"></script>
+  <link rel="shortcut icon" href="favicon.ico" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: #FFF;
+      font-family: Palatino, 'Palatino Linotype', 'Hoefler Text', Times, 'Times New Roman', serif;
+      font-size: 18px;
+      color: #000;
+      line-height: 24px;
+      text-align: center;
+      margin-bottom: 120px;
+    }
+
+    p {
+      margin-bottom: 24px;
+    }
+
+    a:link { color: #A00; }
+    a:visited { color: #644; }
+
+    h1 {
+      font-family: 'IM Fell English SC', serif;
+      font-weight: normal;
+      font-size: 48px;
+      line-height: 48px;
+      margin-top: 48px;
+    }
+
+    .subtitle {
+      font-family: 'IM Fell English', serif;
+      font-weight: normal;
+      font-size: 24px;
+      line-height: 48px;
+      font-style: italic;
+    }
+
+    h2 {
+      font-weight: normal;
+      font-size: 32px;
+      font-family: 'IM Fell English SC', serif;
+      line-height: 48px;
+      margin-top: 0;
+    }
+
+    h3 {
+      font-size: 18px;
+      line-height: 24px;
+    }
+
+    .section {
+      width: 650px;
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    .divider {
+      margin: 48px 0;
+      text-align: center;
+      line-height: 0;
+      font-size: 0;
+    }
+
+    .example {
+      box-sizing: border-box;
+      background: #EEEEEE;
+      box-shadow: 0 0 50px 0 rgba(0,0,0,0.1) inset;
+      -webkit-border-radius: 10px;
+      -moz-border-radius: 10px;
+      border-radius: 10px;
+    }
+
+    pre {
+      font-family: Courier, monospace;
+      background: #EEEEEE;
+      box-shadow: 0 0 50px 0 rgba(0,0,0,0.1) inset;
+      -webkit-border-radius: 10px;
+      -moz-border-radius: 10px;
+      border-radius: 10px;
+      padding: 24px;
+      margin: 24px 0;
+    }
+
+    .Function { font-weight: bold; }
+    .Normal { font-weight: bold; }
+    .Identifier { font-weight: bold; }
+    .Comment { color: #808080; }
+  </style>
+</head>
+<body>
+  <h1>Springy.js</h1>
+  <p class="subtitle">A force directed graph layout algorithm in JavaScript.</p>
+
+  <div class="divider"><img src="chamaecyparis_obtusa.png" width="185" height="138" alt="Chamaecyparis obtusa" title="Chamaecyparis obtusa" /></div>
+
+  <p>
+    <a href="demo.html">Demo</a> |
+    <a href="https://github.com/dhotson/springy/zipball/master">Download</a> |
+    <a href="#getting-started">Getting started</a> |
+    <a href="https://github.com/dhotson/springy/">GitHub</a> |
+    <a href="mailto:dennis.hotson@gmail.com">Contact</a>
+  </p>
+
+  <div id="what" class="section">
+    <h2>What is Springy?</h2>
+    <p>Springy is a force directed graph layout algorithm.</p>
+    <p>So what does this &ldquo;force directed&rdquo; stuff mean anyway? <i>Excellent question!</i></p>
+    <p>It means that springy uses some real world physics to try and figure out how to show a network graph in a way that looks good.</p>
+    <p>Here's an example:</p>
+
+    <canvas id="demo" class="example" width="650" height="288"></canvas>
+  </div>
+
+  <!-- Here's a Springy worked example right here in the source. Enjoy! :-) -->
+  <script>
+(function() {
+  // make a new graph
+  var graph = new Graph();
+
+  // make some nodes
+  var node1 = graph.newNode({label: 'Norway Spruce'});
+  var node2 = graph.newNode({label: 'Sicilian Fir'});
+  var node3 = graph.newNode({label: 'Sumatran Pine'});
+  var node4 = graph.newNode({label: 'Japanese Larch'});
+
+  // connect them with an edge
+  graph.newEdge(node1, node2);
+  graph.newEdge(node2, node3);
+  graph.newEdge(node2, node4);
+  graph.newEdge(node1, node4);
+
+  var layout = new Layout.ForceDirected(
+    graph,
+    200.0, // Spring stiffness
+    400.0, // Node repulsion
+    0.5 // Damping
+  );
+
+  var canvas = document.getElementById('demo');
+  var ctx = canvas.getContext('2d');
+
+  var renderer = new Renderer(10, layout,
+    function clear() {
+      ctx.clearRect(0, 0, 650, 300);
+    },
+    function drawEdge(edge, p1, p2) {
+      ctx.save();
+      ctx.translate(325, 144);
+
+      ctx.strokeStyle = 'rgba(0,0,0,0.15)';
+      ctx.lineWidth = 3.0;
+
+      ctx.beginPath();
+      ctx.moveTo(p1.x * 50, p1.y * 40);
+      ctx.lineTo(p2.x * 50, p2.y * 40);
+      ctx.stroke();
+
+      ctx.restore();
+    },
+    function drawNode(node, p) {
+      ctx.save();
+      ctx.translate(325, 144);
+
+      ctx.font = "18px 'IM Fell English', 'Times New Roman', serif";
+
+      var width = ctx.measureText(node.data.label).width;
+      var x = p.x * 50;
+      var y = p.y * 40;
+      ctx.clearRect(x - width / 2.0 - 5, y - 12, width + 10, 24);
+      ctx.fillStyle = '#000000';
+      ctx.fillText(node.data.label, x - width / 2.0, y + 5);
+
+      ctx.restore();
+    }
+  );
+
+  renderer.start();
+})()
+  </script>
+
+  <div class="divider"><img src="sequoya_gigantea.png" width="146" height="100" alt="Sequoya gigantea" title="Sequoya gigantea" /></div>
+
+  <div id="getting-started" class="section">
+    <h2>Getting started</h2>
+
+    <p>Springy.js is designed to be small and simple. It provides an abstraction for graph manipulation and for calculating the layout and not too much else.</p>
+    <p>The details of drawing and interaction are mostly up to you. This means you can use canvas, SVG, WebGL, or even just plain old positioned HTML elements.</p>
+
+    <h3>Creating a graph</h3>
+    <p>Here's how to create a graph and add nodes and edges:</p>
+<pre>
+<span class="Comment">// make a new graph</span>
+<span class="Identifier">var</span><span class="Special"> graph = </span><span class="Normal">new</span><span class="Special"> Graph</span>()<span class="Special">;</span>
+
+<span class="Comment">// make some nodes</span>
+<span class="Identifier">var</span><span class="Special"> spruce = graph.newNode</span>(<span class="Function">{</span><span class="Special">label: </span><span class="String">'Norway Spruce'</span><span class="Function">}</span>)<span class="Special">;</span>
+<span class="Identifier">var</span><span class="Special"> fir = graph.newNode</span>(<span class="Function">{</span><span class="Special">label: </span><span class="String">'Sicilian Fir'</span><span class="Function">}</span>)<span class="Special">;</span>
+
+<span class="Comment">// connect them with an edge</span>
+<span class="Special">graph.newEdge</span>(<span class="Special">spruce, fir</span>)<span class="Special">;</span>
+</pre>
+
+    <p>Once you've created a graph, there are a couple of options for displaying it.</p>
+
+    <h3>Use the springyui.js renderer</h3>
+    <p>To help get started quickly, I've included a helper jQuery plugin called springyui.js. It's got a semi&#8209;decent default renderer and some half&#8209;assed drag and drop.</p>
+
+    <p>Here's how to use springyui.js:</p>
+
+<pre>
+<span class="Function">&lt;</span><span class="Statement">canvas</span><span class="Function"> </span><span class="Type">id</span><span class="Function">=</span><span class="String">&quot;my_canvas&quot;</span><span class="Function"> </span><span class="Type">width</span><span class="Function">=</span><span class="String">&quot;600&quot;</span><span class="Function"> </span><span class="Type">height</span><span class="Function">=</span><span class="String">&quot;400&quot;</span><span class="Function"> /&gt;</span>
+<span class="Function">&lt;</span><span class="Statement">script</span><span class="Function">&gt;</span>
+<span class="Special">$</span>(<span class="String">'#my_canvas'</span>)<span class="Special">.springy</span>(<span class="Function">{</span><span class="Special"> graph: graph </span><span class="Function">}</span>)<span class="Special">;</span>
+<span class="Identifier">&lt;/</span><span class="Statement">script</span><span class="Identifier">&gt;</span>
+</pre>
+
+    <h3>Do your own rendering</h3>
+    <p>If you're keen to do your own custom drawing or interaction&mdash;there's a few extra things you'll need to know.</p>
+
+    <p>The core Springy layout algorithm is in the Layout.ForceDirected class.</p>
+    <p>When creating a layout object, there are a few parameters you can tune to make the graph layout algorithm behave how you like:</p>
+<pre>
+<span class="Identifier">var</span> layout = <span class="Normal">new</span> Layout.ForceDirected(
+  graph,
+  <span class="Constant">400</span>.<span class="Constant">0</span>, <span class="Comment">// Spring stiffness</span>
+  <span class="Constant">400</span>.<span class="Constant">0</span>, <span class="Comment">// Node repulsion</span>
+  <span class="Constant">0</span>.<span class="Constant">5</span> <span class="Comment">// Damping</span>
+);
+</pre>
+    <p>
+      To simplify the layout calculation and animation rendering loop, I've provided a Renderer class.
+      You just need to provide some callbacks to do the actual drawing:
+    </p>
+<pre>
+<span class="Identifier">var</span> renderer = <span class="Normal">new</span> Renderer(
+  layout,
+  <span class="Function">function</span> clear() <span class="Function">{</span>
+    <span class="Comment">// code to clear screen</span>
+  <span class="Function">}</span>,
+  <span class="Function">function</span> drawEdge(edge, p1, p2) <span class="Function">{</span>
+    <span class="Comment">// draw an edge</span>
+  <span class="Function">}</span>,
+  <span class="Function">function</span> drawNode(node, p) <span class="Function">{</span>
+    <span class="Comment">// draw a node</span>
+  <span class="Function">}</span>
+);
+</pre>
+
+  <p>Then to start the rendering loop:</p>
+
+<pre>
+renderer.start();
+</pre>
+
+    <p><b>Protip:</b> Take a look at the source code of <a href="https://github.com/dhotson/springy/blob/master/springyui.js">springyui.js</a> to get an idea of how to write your own renderer&mdash;it's a good place to start. Feel free to copy&#8209;paste what you need.</p>
+  </div>
+
+  <div class="divider"><img src="pinus_serotina.png" width="140" height="126" alt="Pinus serotina" title="Pinus serotina" /></div>
+
+
+  <div id="further-reading" class="section">
+    <h2>Further reading</h2>
+    <p>Take a look at the source code of <a href="https://github.com/dhotson/springy/blob/master/springy.js">springy.js</a>. Don't be shy&mdash;there's not that much code and it should be pretty easy to understand.</p>
+    <p>Please let me know if anything is unclear. <a href="mailto:dennis.hotson@gmail.com">Feedback is welcome</a>. <b>:-)</b></p>
+  </div>
+
+  <div class="divider"><img src="cupressus_sempervirens.png" width="167" height="182" alt="Cupressus sempervirens" title="Cupressus sempervirens" /></div>
+
+  <div id="license" class="section">
+    <h2>License</h2>
+    <p>Springy is licensed under the <a href="https://github.com/dhotson/springy/blob/master/LICENSE">MIT</a> license.</p>
+  </div>
+
+  <div id="contributions" class="section">
+    <h2>Contributing</h2>
+    <p>Contributions are welcome and highly encouraged. Please submit a pull request for fixes, features or enhancements.</p>
+  </div>
+
+  <div id="acknowledgements" class="section">
+    <h2>Acknowledgements</h2>
+    <p>Thanks to <a href="http://lachlan.me/">Lachlan Donald</a> for his helpful suggestions and feedback.</p>
+    <p>Thanks to <a href="http://en.wikipedia.org/wiki/Ernst_Haeckel">Ernst Haeckel</a> for the <a href="http://www.flickr.com/photos/origomi/sets/72157601323433758/">beautiful illustrations</a> of various <a href="http://en.wikipedia.org/wiki/Pinophyta">Coniferae</a>.</p>
+  </div>
+
+  <div class="divider"><img src="araucaria_brasiliana.png" width="195" height="262" alt="Araucaria brasiliana" title="Araucaria brasiliana" /></div>
+
+  <script type="text/javascript">
+    var _gaq = _gaq || [];
+    _gaq.push(['_setAccount', 'UA-35866821-1']);
+    _gaq.push(['_trackPageview']);
+
+    (function() {
+      var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+      ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+    })();
+  </script>
+</body>
+
