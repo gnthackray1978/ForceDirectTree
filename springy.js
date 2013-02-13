@@ -335,7 +335,6 @@ Layout.ForceDirected.prototype.eachSpring = function(callback) {
 	});
 };
 
-
 // Physics stuff
 Layout.ForceDirected.prototype.applyCoulombsLaw = function() {
 	this.eachNode(function(n1, point1) {
@@ -401,16 +400,6 @@ Layout.ForceDirected.prototype.totalEnergy = function(timestep) {
 
 	return energy;
 };
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -572,6 +561,207 @@ Layout.ForceDirected.Spring = function(point1, point2, length, k) {
 
 
 
+    var mapHandler = function(currentBB, graph){
+        
+        //this.graph =graph;
+        this.currentBB = currentBB;
+        
+        // graph size 
+        this.graph_width = 2000;
+        this.graph_height = 2000;
+
+        //display size
+        this.display_width = window.innerWidth + 500;
+        this.display_height = window.innerHeight + 500;
+
+        //save screen width/height
+        this.screenHeight = screen.height;
+        this.screenWidth = screen.width;
+
+        //positional controls
+        this.centrePoint = 0;
+        this.centreVerticalPoint = 0;
+        this.zoomOffset = 0;
+
+        this.centrePointXOffset = 0.0;
+        this.centrePointYOffset = 0.0;
+
+        this.mouse_x = 0;
+        this.mouse_y = 0;
+
+        // queue of points to move graph to 
+        this.mouseQueue = [];
+
+        this.mouseXPercLocat = 0.0;
+        this.mouseYPercLocat = 0.0;
+
+        this.percX1 = 0.0;
+        this.percY1 = 0.0; 
+
+    }
+
+
+    mapHandler.prototype = {
+        
+        SetCentrePoint:function (param_x, param_y) {
+            if (param_x == 1000000 && param_y == 1000000) {
+                this.centrePointXOffset = 0;
+                this.centrePointYOffset = 0;
+            }
+            else {
+                if (this.centrePointXOffset === 0) {
+                    this.centrePointXOffset = this.centrePoint - param_x;
+                }
+                else {
+
+                    this.centrePoint = param_x + this.centrePointXOffset;
+                }
+                if (this.centrePointYOffset === 0) {
+                    this.centrePointYOffset = this.centreVerticalPoint - param_y;
+                }
+                else {
+
+                    this.centreVerticalPoint = param_y + this.centrePointYOffset;
+                }
+            }
+        },
+        SetZoomStart: function () {
+            this.GetPercDistances();
+            this.mouseXPercLocat = this.percX1;
+            this.mouseYPercLocat = this.percY1;
+        },
+        GetPercDistances: function () {
+
+
+            var _distanceFromX1 = 0.0;
+            var _distanceFromY1 = 0.0;
+            var _onePercentDistance = 0.0;
+
+            this.percX1 = 0.0;
+            this.percY1 = 0.0;
+
+
+
+            //   this.drawingWidth = this.drawingX2 - this.drawingX1;
+            //  this.drawingHeight = this.drawingY2 - this.drawingY1;
+
+
+
+            if (this.graph_width !== 0 && this.graph_height !== 0) {
+                if (this.centrePoint > 0) {
+                    _distanceFromX1 = this.mouse_x - this.centrePoint; //;
+                }
+                else {
+                    _distanceFromX1 = Math.abs(this.centrePoint) + this.mouse_x;
+                }
+
+                _onePercentDistance = this.graph_width / 100;
+                this.percX1 = _distanceFromX1 / _onePercentDistance;
+
+                if (this.centreVerticalPoint > 0) {
+                    _distanceFromY1 = this.mouse_y - this.centreVerticalPoint; // ;                
+                }
+                else {
+                    _distanceFromY1 = Math.abs(this.centreVerticalPoint) + this.mouse_y;
+                }
+
+                _onePercentDistance = this.graph_height / 100;
+                this.percY1 = _distanceFromY1 / _onePercentDistance;
+
+            }
+
+
+        },
+        UpdatePosition:function(_dir){
+            
+            var increment = 2;
+            
+            if (_dir == 'SOUTH') {
+                this.centreVerticalPoint -= increment;
+            }
+            if (_dir == 'NORTH') {
+                this.centreVerticalPoint += increment;
+            }
+            if (_dir == 'EAST') {
+                this.centrePoint += increment;
+            }
+            if (_dir == 'WEST') {
+
+                this.centrePoint -= increment;
+            }
+            if (_dir == 'UP' || _dir == 'DOWN') {
+
+                this.mouse_x = this.screenWidth / 2;
+                this.mouse_y = this.screenHeight / 2;
+
+                this.GetPercDistances();
+
+                this.mouseXPercLocat = this.percX1;
+                this.mouseYPercLocat = this.percY1;
+
+                // zero the centre point 
+                this.SetCentrePoint(1000000, 1000000);
+
+                if (_dir == 'UP') {
+                    this.graph_width += 50;
+                    this.graph_height += 50;
+                } else {
+                    this.graph_width -= 50;
+                    this.graph_height -= 50;
+                }
+
+                this.GetPercDistances();
+
+
+                //console.log('y zoom ' + percY1 + ' ' + mouseYPercLocat);
+                this.centreVerticalPoint += (this.graph_height / 100) * (this.percY1 - this.mouseYPercLocat);
+                //console.log('x zoom ' + percX1 + ' ' + mouseXPercLocat);
+
+                this.centrePoint += (this.graph_width / 100) * (this.percX1 - this.mouseXPercLocat);
+            }
+
+        },
+        
+       
+        
+        currentPositionFromScreen:function(pos,e){            
+             var utils = new Utils(this.currentBB);                
+             var p = utils.fromScreen({ x: (e.pageX - this.centrePoint) - pos.left, y: (e.pageY - this.centreVerticalPoint) - pos.top });            
+             return p;
+        },
+        currentPositionToScreen:function(pos,e){
+             var utils = new Utils(this.currentBB);             
+             var p = utils.toScreen({ x: (e.pageX - this.centrePoint) - pos.left, y: (e.pageY - this.centreVerticalPoint) - pos.top });            
+             return p;
+        },
+        
+        addToMouseQueue: function(x,y){            
+            var _point = new Array(x, y);
+            this.mouseQueue[this.mouseQueue.length] = _point;            
+        },
+       
+        validToDraw:function(x1,y1){
+            
+            var validDraw =true;
+            
+            if ( x1 > this.display_width) validDraw = false;
+    	    if ( x1 < -500) validDraw = false;
+            if ( y1 > this.display_height) validDraw = false;
+            if ( y1 < -500) validDraw = false;
+            
+            return validDraw;    
+        },
+        mapOffset:function(v1){
+            
+            v1.x += this.centrePoint;
+		    v1.y += this.centreVerticalPoint;
+            
+            return v1;
+        }
+ 
+
+    };
+
 
 
 
@@ -585,13 +775,14 @@ Layout.ForceDirected.Spring = function(point1, point2, length, k) {
 // };
 
 // Renderer handles the layout rendering loop
-function Renderer(interval, layout, clear, drawEdge, drawNode) {
+function Renderer(interval,mapHandler, layout, clear, drawEdge, drawNode) {
 	this.interval = interval;
 	this.layout = layout;
 	this.clear = clear;
 	this.drawEdge = drawEdge;
 	this.drawNode = drawNode;
-
+    this.mapHandler = mapHandler;
+    
 	this.layout.graph.addGraphListener(this);
 }
 
@@ -613,4 +804,64 @@ Renderer.prototype.start = function() {
 		});
 	});
 };
+
+
+function Utils(currentBB){
+    this.currentBB = currentBB;    
+}
+
+Utils.prototype = {
+    
+        toScreen:function (p) {
+            var size = this.currentBB.topright.subtract(this.currentBB.bottomleft);
+            var sx = p.subtract(this.currentBB.bottomleft).divide(size.x).x * this.graph_width;
+            var sy = p.subtract(this.currentBB.bottomleft).divide(size.y).y * this.graph_height;
+            return new Vector(sx, sy);
+        },
+
+        fromScreen:function (s) {
+            var size = this.currentBB.topright.subtract(this.currentBB.bottomleft);
+            var px = (s.x / this.graph_width) * size.x + this.currentBB.bottomleft.x;
+            var py = (s.y / this.graph_height) * size.y + this.currentBB.bottomleft.y;
+            return new Vector(px, py);
+        },
+        intersect_line_line: function(p1, p2, p3, p4) {
+            var denom = ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
+
+            // lines are parallel
+            if (denom === 0) {
+                return false;
+            }
+
+            var ua = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / denom;
+            var ub = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / denom;
+
+            if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+                return false;
+            }
+
+            return new Vector(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
+        },
+
+        intersect_line_box: function(p1, p2, p3, w, h) {
+            var tl = { x: p3.x, y: p3.y };
+            var tr = { x: p3.x + w, y: p3.y };
+            var bl = { x: p3.x, y: p3.y + h };
+            var br = { x: p3.x + w, y: p3.y + h };
+
+            var result;
+            if (result = this.intersect_line_line(p1, p2, tl, tr)) { return result; } // top
+            if (result = this.intersect_line_line(p1, p2, tr, br)) { return result; } // right
+            if (result = this.intersect_line_line(p1, p2, br, bl)) { return result; } // bottom
+            if (result = this.intersect_line_line(p1, p2, bl, tl)) { return result; } // left
+
+            return false;
+        }
+    
+}
+
+
+
+
+
 
