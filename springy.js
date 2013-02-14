@@ -556,44 +556,44 @@ Layout.ForceDirected.Spring = function(point1, point2, length, k) {
 
 
 
-    var mapHandler = function(currentBB, graph){
-        
-        //this.graph =graph;
-        this.currentBB = currentBB;
-        
-        // graph size 
-        this.graph_width = 2000;
-        this.graph_height = 2000;
+var mapHandler = function(currentBB, graph){
+    
+    //this.graph =graph;
+    this.currentBB = currentBB;
+    
+    // graph size 
+    this.graph_width = 2000;
+    this.graph_height = 2000;
 
-        //display size
-        this.display_width = window.innerWidth + 500;
-        this.display_height = window.innerHeight + 500;
+    //display size
+    this.display_width = window.innerWidth + 500;
+    this.display_height = window.innerHeight + 500;
 
-        //save screen width/height
-        this.screenHeight = screen.height;
-        this.screenWidth = screen.width;
+    //save screen width/height
+    this.screenHeight = screen.height;
+    this.screenWidth = screen.width;
 
-        //positional controls
-        this.centrePoint = 0;
-        this.centreVerticalPoint = 0;
-        this.zoomOffset = 0;
+    //positional controls
+    this.centrePoint = 0;
+    this.centreVerticalPoint = 0;
+    this.zoomOffset = 0;
 
-        this.centrePointXOffset = 0.0;
-        this.centrePointYOffset = 0.0;
+    this.centrePointXOffset = 0.0;
+    this.centrePointYOffset = 0.0;
 
-        this.mouse_x = 0;
-        this.mouse_y = 0;
+    this.mouse_x = 0;
+    this.mouse_y = 0;
 
-        // queue of points to move graph to 
-        this.mouseQueue = [];
+    // queue of points to move graph to 
+    this.mouseQueue = [];
 
-        this.mouseXPercLocat = 0.0;
-        this.mouseYPercLocat = 0.0;
+    this.mouseXPercLocat = 0.0;
+    this.mouseYPercLocat = 0.0;
 
-        this.percX1 = 0.0;
-        this.percY1 = 0.0; 
+    this.percX1 = 0.0;
+    this.percY1 = 0.0; 
 
-    };
+};
 
 
     mapHandler.prototype = {
