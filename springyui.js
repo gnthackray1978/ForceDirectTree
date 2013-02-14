@@ -22,9 +22,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 */
 (function () {
 
-    var Vector,Renderer,Layout,Graph,mapHandler;
+    //var Vector, Renderer, Layout, Graph, mapHandler;
 
- 
+
 
 
 
@@ -35,28 +35,27 @@ OTHER DEALINGS IN THE SOFTWARE.
         var repulsion = params.repulsion || 500.0;
         var damping = params.damping || 0.5;
         var nodeSelected = params.nodeSelected || null;
-    
+
+        var canvas = this[0];
+        var ctx = canvas.getContext("2d");
+
         var layout = this.layout = new Layout.ForceDirected(graph, stiffness, repulsion, damping);
 
         // calculate bounding box of graph layout.. with ease-in
-        var currentBB = layout.getBoundingBox();
+   //     var currentBB = layout.getBoundingBox();
         var targetBB = { bottomleft: new Vector(-2, -2), topright: new Vector(2, 2) };
         var mouseup = true;
         var _dir = '';
 
 
-        var fdMapHandler = new mapHandler(layout.getBoundingBox(),graph) ;
+        var fdMapHandler = new mapHandler(layout.getBoundingBox(), graph);
 
         // auto adjusting bounding box
         Layout.requestAnimationFrame(function adjust() {
             targetBB = layout.getBoundingBox();
+
             // current gets 20% closer to target every iteration
-            currentBB = {
-                bottomleft: currentBB.bottomleft.add(targetBB.bottomleft.subtract(currentBB.bottomleft)
-    			.divide(10)),
-                topright: currentBB.topright.add(targetBB.topright.subtract(currentBB.topright)
-				.divide(10))
-            };
+            fdMapHandler.zoomCurrentBB(targetBB, 10);
 
             while (fdMapHandler.mouseQueue.length > 0) {
                 var _point = fdMapHandler.mouseQueue.shift();
@@ -64,7 +63,7 @@ OTHER DEALINGS IN THE SOFTWARE.
             }
 
             fdMapHandler.UpdatePosition(_dir);
-       
+
             Layout.requestAnimationFrame(adjust);
         });
 
@@ -76,14 +75,14 @@ OTHER DEALINGS IN THE SOFTWARE.
         var nearest = null;
         var dragged = null;
 
-        jQuery(fdMapHandler.canvas).mousedown(function (e) {         
+        jQuery(canvas).mousedown(function (e) {
             jQuery('.actions').hide();
 
             var pos = jQuery(this).offset();
 
             mouseup = false;
 
-            var p =  fdMapHandler.currentPositionFromScreen(pos,e);    // fromScreen({ x: (e.pageX - centrePoint) - pos.left, y: (e.pageY - centreVerticalPoint) - pos.top });
+            var p = fdMapHandler.currentPositionFromScreen(pos, e);    // fromScreen({ x: (e.pageX - centrePoint) - pos.left, y: (e.pageY - centreVerticalPoint) - pos.top });
 
             selected = nearest = dragged = layout.nearest(p);
 
@@ -98,8 +97,8 @@ OTHER DEALINGS IN THE SOFTWARE.
             renderer.start();
 
         }).mouseup(function () {
-            mouseup = true;            
-            fdMapHandler.addToMouseQueue(1000000, 1000000); 
+            mouseup = true;
+            fdMapHandler.addToMouseQueue(1000000, 1000000);
         });
 
         $(".button_box").mousedown(function (evt) {
@@ -121,14 +120,14 @@ OTHER DEALINGS IN THE SOFTWARE.
         });
 
 
-        jQuery(fdMapHandler.canvas).mousemove(function (e) {                    
+        jQuery(canvas).mousemove(function (e) {
             var pos = jQuery(this).offset();
-            var p = fdMapHandler.currentPositionFromScreen(pos,e );    
+            var p = fdMapHandler.currentPositionFromScreen(pos, e);
 
             if (!mouseup && selected.node === null) {
-                fdMapHandler.addToMouseQueue(e.clientX,e.clientY);                
+                fdMapHandler.addToMouseQueue(e.clientX, e.clientY);
             }
-                        
+
             nearest = layout.nearest(p);
 
             if (dragged !== null && dragged.node !== null) {
@@ -150,7 +149,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
             ctx.save();
             ctx.font = "16px Verdana, sans-serif";
-            var width = fdMapHandler.ctx.measureText(text).width + 10;
+            var width = ctx.measureText(text).width + 10;
             ctx.restore();
 
             this._width || (this._width = {});
@@ -163,177 +162,187 @@ OTHER DEALINGS IN THE SOFTWARE.
             return 20;
         };
 
-        var renderer = new Renderer(1, layout,
+
+
+
+        var renderer = new Renderer(1, fdMapHandler, layout,
             function () {
+                var map = this.map;
                 ctx.clearRect(0, 0, map.graph_width, map.graph_height);
-		    },        
-            function(map, node, p) {
-
-            var _utils = new Utils(currentBB);
-            
-            var x1 = map.mapOffset(_utils.toScreen(p1)).x;            
-    	    var y1 = map.mapOffset(_utils.toScreen(p1)).y;
-            
-            if(!map.validToDraw(x1,y1)) return;
-       
-            var s = map.mapOffset(_utils.toScreen(p));
-
-		    ctx.save();
-
-		    var boxWidth = 20; // node.getWidth();
-		    var boxHeight = 20;// node.getHeight();
-
-		    // clear background
-		    //		    ctx.clearRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
+            },
 
 
-
-		    //		    // fill background
-		    //		    if (selected !== null && selected.node !== null && nearest.node !== null && selected.node.id === node.id) {
-		    //		        ctx.fillStyle = "Red";
-		    //		    } else if (nearest !== null && nearest.node !== null && nearest.node.id === node.id) {
-		    //		        ctx.fillStyle = "Green";
-		    //		    } else {
-		    //		        ctx.fillStyle = "#FFFFFF";
-		    //		    }
+            function (edge, p1, p2) {
 
 
-		    //		    ctx.fillRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
+                var map = this.map;
+                var _utils = new Utils(this.map.currentBB, map.graph_width, map.graph_height);
+
+                var x1 = map.mapOffset(_utils.toScreen(p1)).x;
+                var y1 = map.mapOffset(_utils.toScreen(p1)).y;
+
+                var x2 = map.mapOffset(_utils.toScreen(p2)).x;
+                var y2 = map.mapOffset(_utils.toScreen(p2)).y;
 
 
-		    var radgrad = ctx.createRadialGradient(s.x + 2, s.y + 3, 1, s.x + 5, s.y + 5, 5);
-
-		    radgrad.addColorStop(0, '#A7D30C');
-		    radgrad.addColorStop(0.9, '#019F62');
-		    radgrad.addColorStop(1, 'rgba(1,159,98,0)');
+                if (!map.validToDraw(x1, y1)) return;
+                if (!map.validToDraw(x2, y2)) return;
 
 
+                var direction = new Vector(x2 - x1, y2 - y1);
+                var normal = direction.normal().normalise();
 
-		    ctx.fillStyle = radgrad;
-		    ctx.fillRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
+                var from = graph.getEdges(edge.source, edge.target);
+                var to = graph.getEdges(edge.target, edge.source);
+
+                var total = from.length + to.length;
+
+                // Figure out edge's position in relation to other edges between the same nodes
+                var n = 0;
+                for (var i = 0; i < from.length; i++) {
+                    if (from[i].id === edge.id) {
+                        n = i;
+                    }
+                }
+
+                var spacing = 6.0;
+
+                // Figure out how far off center the line should be drawn
+                var offset = normal.multiply(-((total - 1) * spacing) / 2.0 + (n * spacing));
 
 
 
-		    ctx.textAlign = "left";
-		    ctx.textBaseline = "top";
-		    ctx.font = "16px Verdana, sans-serif";
-		    ctx.fillStyle = "#000000";
-		    ctx.font = "16px Verdana, sans-serif";
-		    var text = typeof (node.data.label) !== 'undefined' ? node.data.label : node.id;
-		    ctx.fillText(text, s.x - boxWidth / 2 + 5, s.y - 8);
-
-		    ctx.restore();
-		},        
-            function(map, edge, p1, p2) {
-
-            var _utils = new Utils(currentBB);
-            
-            var x1 = map.mapOffset(_utils.toScreen(p1)).x;            
-		    var y1 = map.mapOffset(_utils.toScreen(p1)).y;
-            
-		    var x2 = map.mapOffset(_utils.toScreen(p2)).x;
-		    var y2 = map.mapOffset(_utils.toScreen(p2)).y;
+                var s1 = map.mapOffset(_utils.toScreen(p1).add(offset));
+                var s2 = map.mapOffset(_utils.toScreen(p2).add(offset));
 
 
-            if(!map.validToDraw(x1,y1)) return;
-            if(!map.validToDraw(x2,y2)) return;
+                var boxWidth = edge.target.getWidth();
+                var boxHeight = edge.target.getHeight();
 
-         
-		    var direction = new Vector(x2 - x1, y2 - y1);
-		    var normal = direction.normal().normalise();
+                var intersection = _utils.intersect_line_box(s1, s2, { x: x2 - boxWidth / 2.0, y: y2 - boxHeight / 2.0 }, boxWidth, boxHeight);
 
-		    var from = this.graph.getEdges(edge.source, edge.target);
-		    var to = this.graph.getEdges(edge.target, edge.source);
+                if (!intersection) {
+                    intersection = s2;
+                }
 
-		    var total = from.length + to.length;
+                var stroke = typeof (edge.data.color) !== 'undefined' ? edge.data.color : '#000000';
 
-		    // Figure out edge's position in relation to other edges between the same nodes
-		    var n = 0;
-		    for (var i = 0; i < from.length; i++) {
-		        if (from[i].id === edge.id) {
-		            n = i;
-		        }
-		    }
+                var arrowWidth;
+                var arrowLength;
 
-		    var spacing = 6.0;
+                var weight = typeof (edge.data.weight) !== 'undefined' ? edge.data.weight : 1.0;
 
-		    // Figure out how far off center the line should be drawn
-		    var offset = normal.multiply(-((total - 1) * spacing) / 2.0 + (n * spacing));
+                ctx.lineWidth = Math.max(weight * 2, 0.1);
+                arrowWidth = 1 + ctx.lineWidth;
+                arrowLength = 8;
+
+                var directional = typeof (edge.data.directional) !== 'undefined' ? edge.data.directional : true;
+
+                // line
+                var lineEnd;
+                if (directional) {
+                    lineEnd = intersection.subtract(direction.normalise().multiply(arrowLength * 0.5));
+                } else {
+                    lineEnd = s2;
+                }
+
+                ctx.strokeStyle = stroke;
+                ctx.beginPath();
+                ctx.moveTo(s1.x, s1.y);
+                ctx.lineTo(lineEnd.x, lineEnd.y);
+                ctx.stroke();
+
+                // arrow
+                if (directional) {
+                    ctx.save();
+                    ctx.fillStyle = stroke;
+                    ctx.translate(intersection.x, intersection.y);
+                    ctx.rotate(Math.atan2(y2 - y1, x2 - x1));
+                    ctx.beginPath();
+                    ctx.moveTo(-arrowLength, arrowWidth);
+                    ctx.lineTo(0, 0);
+                    ctx.lineTo(-arrowLength, -arrowWidth);
+                    ctx.lineTo(-arrowLength * 0.8, -0);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.restore();
+                }
+
+                // label
+                if (typeof (edge.data.label) !== 'undefined') {
+                    var text = edge.data.label
+                    ctx.save();
+                    ctx.textAlign = "center";
+                    ctx.textBaseline = "top";
+                    ctx.font = "10px Helvetica, sans-serif";
+                    ctx.fillStyle = "#5BA6EC";
+                    ctx.fillText(text, (x1 + x2) / 2, (y1 + y2) / 2);
+                    ctx.restore();
+                }
+
+            },
+
+            function (node, p) {
+
+                var map = this.map;
+                var _utils = new Utils(this.map.currentBB, map.graph_width, map.graph_height);
+
+                var x1 = map.mapOffset(_utils.toScreen(p)).x;
+                var y1 = map.mapOffset(_utils.toScreen(p)).y;
+
+                if (!map.validToDraw(x1, y1)) return;
+
+                var s = map.mapOffset(_utils.toScreen(p));
+
+                ctx.save();
+
+                var boxWidth = 20; // node.getWidth();
+                var boxHeight = 20; // node.getHeight();
+
+                // clear background
+                //		    ctx.clearRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
 
 
 
-		    var s1 = map.mapOffset(_utils.toScreen(p1).add(offset));            
-		    var s2 = map.mapOffset(_utils.toScreen(p2).add(offset));
+                //		    // fill background
+                //		    if (selected !== null && selected.node !== null && nearest.node !== null && selected.node.id === node.id) {
+                //		        ctx.fillStyle = "Red";
+                //		    } else if (nearest !== null && nearest.node !== null && nearest.node.id === node.id) {
+                //		        ctx.fillStyle = "Green";
+                //		    } else {
+                //		        ctx.fillStyle = "#FFFFFF";
+                //		    }
 
 
-		    var boxWidth = edge.target.getWidth();
-		    var boxHeight = edge.target.getHeight();
+                //		    ctx.fillRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
 
-		    var intersection = this.intersect_line_box(s1, s2, { x: x2 - boxWidth / 2.0, y: y2 - boxHeight / 2.0 }, boxWidth, boxHeight);
 
-		    if (!intersection) {
-		        intersection = s2;
-		    }
+                var radgrad = ctx.createRadialGradient(s.x + 2, s.y + 3, 1, s.x + 5, s.y + 5, 5);
 
-            var stroke = typeof (edge.data.color) !== 'undefined' ? edge.data.color : '#000000';
+                radgrad.addColorStop(0, '#A7D30C');
+                radgrad.addColorStop(0.9, '#019F62');
+                radgrad.addColorStop(1, 'rgba(1,159,98,0)');
 
-		    var arrowWidth;
-		    var arrowLength;
 
-		    var weight = typeof (edge.data.weight) !== 'undefined' ? edge.data.weight : 1.0;
 
-		    ctx.lineWidth = Math.max(weight * 2, 0.1);
-		    arrowWidth = 1 + ctx.lineWidth;
-		    arrowLength = 8;
+                ctx.fillStyle = radgrad;
+                ctx.fillRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
 
-		    var directional = typeof (edge.data.directional) !== 'undefined' ? edge.data.directional : true;
 
-		    // line
-		    var lineEnd;
-		    if (directional) {
-		        lineEnd = intersection.subtract(direction.normalise().multiply(arrowLength * 0.5));
-		    } else {
-		        lineEnd = s2;
-		    }
 
-		    ctx.strokeStyle = stroke;
-		    ctx.beginPath();
-		    ctx.moveTo(s1.x, s1.y);
-		    ctx.lineTo(lineEnd.x, lineEnd.y);
-		    ctx.stroke();
+                ctx.textAlign = "left";
+                ctx.textBaseline = "top";
+                ctx.font = "16px Verdana, sans-serif";
+                ctx.fillStyle = "#000000";
+                ctx.font = "16px Verdana, sans-serif";
+                var text = typeof (node.data.label) !== 'undefined' ? node.data.label : node.id;
+                ctx.fillText(text, s.x - boxWidth / 2 + 5, s.y - 8);
 
-		    // arrow
-		    if (directional) {
-		        this.ctx.save();
-		        this.ctx.fillStyle = stroke;
-		        this.ctx.translate(intersection.x, intersection.y);
-		        this.ctx.rotate(Math.atan2(y2 - y1, x2 - x1));
-		        this.ctx.beginPath();
+                ctx.restore();
+            }
 
-		        this.ctx.moveTo(-arrowLength, arrowWidth);
 
-		        this.ctx.lineTo(0, 0);
-		        this.ctx.lineTo(-arrowLength, -arrowWidth);
-		        this.ctx.lineTo(-arrowLength * 0.8, -0);
-		        this.ctx.closePath();
-		        this.ctx.fill();
-		        this.ctx.restore();
-		    }
 
-		    // label
-		    if (typeof (edge.data.label) !== 'undefined') {
-		        var text = edge.data.label
-		        this.ctx.save();
-		        this.ctx.textAlign = "center";
-		        this.ctx.textBaseline = "top";
-		        this.ctx.font = "10px Helvetica, sans-serif";
-		        this.ctx.fillStyle = "#5BA6EC";
-		        this.ctx.fillText(text, (x1 + x2) / 2, (y1 + y2) / 2);
-		        this.ctx.restore();
-		    }
-
-		}
-        
         );
 
         renderer.start();
@@ -344,7 +353,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
         // helpers for figuring out where to draw arrows
-      
+
         return this;
     }
 

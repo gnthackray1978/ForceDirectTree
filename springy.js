@@ -721,16 +721,26 @@ Layout.ForceDirected.Spring = function(point1, point2, length, k) {
             }
 
         },
+
+        zoomCurrentBB: function (targetBB, amount) {
+
+            this.currentBB = {
+                bottomleft: this.currentBB.bottomleft.add(targetBB.bottomleft.subtract(this.currentBB.bottomleft)
+    			.divide(amount)),
+                topright: this.currentBB.topright.add(targetBB.topright.subtract(this.currentBB.topright)
+				.divide(amount))
+            };
+
+
+        },
         
-       
-        
-        currentPositionFromScreen:function(pos,e){            
-             var utils = new Utils(this.currentBB);                
+        currentPositionFromScreen:function(pos,e){
+            var utils = new Utils(this.currentBB, this.graph_width, this.graph_height);                
              var p = utils.fromScreen({ x: (e.pageX - this.centrePoint) - pos.left, y: (e.pageY - this.centreVerticalPoint) - pos.top });            
              return p;
         },
         currentPositionToScreen:function(pos,e){
-             var utils = new Utils(this.currentBB);             
+            var utils = new Utils(this.currentBB, this.graph_width, this.graph_height);             
              var p = utils.toScreen({ x: (e.pageX - this.centrePoint) - pos.left, y: (e.pageY - this.centreVerticalPoint) - pos.top });            
              return p;
         },
@@ -781,7 +791,7 @@ function Renderer(interval,mapHandler, layout, clear, drawEdge, drawNode) {
 	this.clear = clear;
 	this.drawEdge = drawEdge;
 	this.drawNode = drawNode;
-    this.mapHandler = mapHandler;
+    this.map = mapHandler;
     
 	this.layout.graph.addGraphListener(this);
 }
@@ -806,8 +816,10 @@ Renderer.prototype.start = function() {
 };
 
 
-function Utils(currentBB){
-    this.currentBB = currentBB;    
+function Utils(currentBB, gwidth,hwidth){
+    this.currentBB = currentBB;
+    this.graph_width = gwidth;
+    this.graph_height = hwidth;
 }
 
 Utils.prototype = {
