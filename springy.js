@@ -562,8 +562,8 @@ var mapHandler = function(currentBB, graph){
     this.currentBB = currentBB;
     
     // graph size 
-    this.graph_width = 2000;
-    this.graph_height = 2000;
+    this.graph_width = 1300;
+    this.graph_height = 1000;
 
     //display size
     this.display_width = window.innerWidth + 500;

@@ -27,39 +27,9 @@ jQuery(function () {
 
             var graph = new Graph();
 
-
-
-            var genIdx = 0;
-
-            while (genIdx < 8) {
-
-                var personIdx = 0;
-                var genArray = new Array();
-
-                while (personIdx < data.Generations[genIdx].length) {
-
-                    var currentPerson = data.Generations[genIdx][personIdx];
-
-                    if (!currentPerson.IsHtmlLink) {
-                        var descriptor = '.'; // currentPerson.DOB + ' ' + currentPerson.Name;
-
-                        data.Generations[genIdx][personIdx].nodeLink = graph.newNode({ label: descriptor });
-
-                        if (genIdx > 0) {
-                            var fatherNode = data.Generations[genIdx - 1][currentPerson.FatherIdx].nodeLink;
-                            graph.newEdge(fatherNode, currentPerson.nodeLink, { color: '#99CCFF' });
-                        }
-                    }
-
-                    personIdx++;
-                }
-
-                genIdx++;
-            }
-
-
             var springy = jQuery('#springydemo').springy({
                 graph: graph,
+                data:data,
                 nodeSelected: function (node) {
                     console.log('Node selected: ' + JSON.stringify(node.data));
                 }

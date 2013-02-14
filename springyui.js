@@ -39,13 +39,108 @@ OTHER DEALINGS IN THE SOFTWARE.
         var canvas = this[0];
         var ctx = canvas.getContext("2d");
 
+        var data = params.data;
+
+
+
+
+
+        //        while (genIdx < 8) {
+
+        //            var personIdx = 0;
+        //            var genArray = new Array();
+
+        //            while (personIdx < data.Generations[genIdx].length) {
+
+        //                var currentPerson = data.Generations[genIdx][personIdx];
+
+        //                if (!currentPerson.IsHtmlLink) {
+        //                    var descriptor = '.'; // currentPerson.DOB + ' ' + currentPerson.Name;
+
+        //                    data.Generations[genIdx][personIdx].nodeLink = graph.newNode({ label: descriptor });
+
+        //                    if (genIdx > 0) {
+        //                        var fatherNode = data.Generations[genIdx - 1][currentPerson.FatherIdx].nodeLink;
+        //                        graph.newEdge(fatherNode, currentPerson.nodeLink, { color: '#99CCFF' });
+        //                    }
+        //                }
+
+        //                personIdx++;
+        //            }
+
+        //            genIdx++;
+        //        }
+
+
+        var myVar;
+        var year = 1660;
+
+
+
+        var myVar = setInterval(function () { myTimer() }, 3000);
+
+        function myTimer() {
+
+            $('#map_year').html(year);
+
+            var genIdx = 0;
+
+            while (genIdx < 8) {
+
+                var personIdx = 0;
+                var genArray = new Array();
+
+
+                while (personIdx < data.Generations[genIdx].length) {
+
+                    var currentPerson = data.Generations[genIdx][personIdx];
+
+                    if (!currentPerson.IsHtmlLink) {
+                        var descriptor = '.'; // currentPerson.DOB + ' ' + currentPerson.Name;
+
+                        var _dob = data.Generations[genIdx][personIdx].DOB;
+
+                        if ( _dob == (year - 4) || _dob == (year - 3) || _dob == (year - 2) || _dob == (year - 1) || _dob == year) {
+
+                            if (data.Generations[genIdx][personIdx].nodeLink == undefined || data.Generations[genIdx][personIdx].nodeLink == null) {
+                            
+                                data.Generations[genIdx][personIdx].nodeLink = graph.newNode({ label: descriptor });
+                            }
+
+
+                            if (genIdx > 0) {
+                                var fatherNode = data.Generations[genIdx - 1][currentPerson.FatherIdx].nodeLink;
+                                graph.newEdge(fatherNode, currentPerson.nodeLink, { color: '#99CCFF' });
+                            }
+                        }
+
+                    }
+
+                    personIdx++;
+                }
+
+                genIdx++;
+            }
+
+            year += 5;
+
+            //if (genIdx == 9) myStopFunction();
+        }
+
+        function myStopFunction() {
+            clearInterval(myVar);
+        }
+
+
         var layout = this.layout = new Layout.ForceDirected(graph, stiffness, repulsion, damping);
 
         // calculate bounding box of graph layout.. with ease-in
-   //     var currentBB = layout.getBoundingBox();
+        //     var currentBB = layout.getBoundingBox();
         var targetBB = { bottomleft: new Vector(-2, -2), topright: new Vector(2, 2) };
         var mouseup = true;
         var _dir = '';
+
+
 
 
         var fdMapHandler = new mapHandler(layout.getBoundingBox(), graph);
