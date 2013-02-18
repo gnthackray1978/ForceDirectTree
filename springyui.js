@@ -75,7 +75,7 @@ OTHER DEALINGS IN THE SOFTWARE.
         var myVar;
         var year = 1660;
 
-
+        var addedPeople = new Array();
 
         var myVar = setInterval(function () { myTimer() }, 3000);
 
@@ -100,17 +100,35 @@ OTHER DEALINGS IN THE SOFTWARE.
 
                         var _dob = data.Generations[genIdx][personIdx].DOB;
 
-                        if ( _dob == (year - 4) || _dob == (year - 3) || _dob == (year - 2) || _dob == (year - 1) || _dob == year) {
+                        if (_dob == (year - 4) || _dob == (year - 3) || _dob == (year - 2) || _dob == (year - 1) || _dob == year) {
 
-                            if (data.Generations[genIdx][personIdx].nodeLink == undefined || data.Generations[genIdx][personIdx].nodeLink == null) {
-                            
-                                data.Generations[genIdx][personIdx].nodeLink = graph.newNode({ label: descriptor });
+                            var personPresent = false;
+                            addedPeople.forEach(function (entry) {
+                                if (entry == data.Generations[genIdx][personIdx].PersonId) {
+                                    personPresent = true;
+
+                                }
+                            });
+
+                            if (!personPresent) {
+                                if (data.Generations[genIdx][personIdx].nodeLink == undefined || data.Generations[genIdx][personIdx].nodeLink == null) {
+
+
+
+                                    addedPeople.push(data.Generations[genIdx][personIdx].PersonId);
+
+                                    data.Generations[genIdx][personIdx].nodeLink = graph.newNode({ label: descriptor, person: data.Generations[genIdx][personIdx] });
+                                }
+
+
+                                if (genIdx > 0) {
+                                    var fatherNode = data.Generations[genIdx - 1][currentPerson.FatherIdx].nodeLink;
+                                    graph.newEdge(fatherNode, currentPerson.nodeLink, { color: '#99CCFF' });
+                                }
+
                             }
-
-
-                            if (genIdx > 0) {
-                                var fatherNode = data.Generations[genIdx - 1][currentPerson.FatherIdx].nodeLink;
-                                graph.newEdge(fatherNode, currentPerson.nodeLink, { color: '#99CCFF' });
+                            else {
+                                console.log('person present');
                             }
                         }
 
@@ -124,7 +142,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 
             year += 5;
 
-            //if (genIdx == 9) myStopFunction();
+
+            if (year == '2000') myStopFunction();
         }
 
         function myStopFunction() {
@@ -143,7 +162,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 
-        var fdMapHandler = new mapHandler(layout.getBoundingBox(), graph);
+        var fdMapHandler = new mapHandler(layout);
 
         // auto adjusting bounding box
         Layout.requestAnimationFrame(function adjust() {
@@ -158,6 +177,12 @@ OTHER DEALINGS IN THE SOFTWARE.
             }
 
             fdMapHandler.UpdatePosition(_dir);
+
+            // iterate through on screen nodes
+            // and add information 
+
+            fdMapHandler.onscreenNodes(20);
+
 
             Layout.requestAnimationFrame(adjust);
         });
@@ -394,41 +419,45 @@ OTHER DEALINGS IN THE SOFTWARE.
                 var boxWidth = 20; // node.getWidth();
                 var boxHeight = 20; // node.getHeight();
 
-                // clear background
-                //		    ctx.clearRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
+
+                if (node.data.type != undefined && node.data.type == 'infonode') {
+                    boxWidth = node.getWidth();
+                    boxHeight = node.getHeight();
+                    ctx.clearRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
+
+                    // fill background
+                    if (selected !== null && selected.node !== null && nearest.node !== null && selected.node.id === node.id) {
+                        ctx.fillStyle = "Red";
+                    } else if (nearest !== null && nearest.node !== null && nearest.node.id === node.id) {
+                        ctx.fillStyle = "Green";
+                    } else {
+                        ctx.fillStyle = "#000000";
+                    }
+
+
+                    ctx.fillRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
+
+                }
+                else {
+                    var radgrad = ctx.createRadialGradient(s.x + 2, s.y + 3, 1, s.x + 5, s.y + 5, 5);
+
+                    radgrad.addColorStop(0, '#A7D30C');
+                    radgrad.addColorStop(0.9, '#019F62');
+                    radgrad.addColorStop(1, 'rgba(1,159,98,0)');
 
 
 
-                //		    // fill background
-                //		    if (selected !== null && selected.node !== null && nearest.node !== null && selected.node.id === node.id) {
-                //		        ctx.fillStyle = "Red";
-                //		    } else if (nearest !== null && nearest.node !== null && nearest.node.id === node.id) {
-                //		        ctx.fillStyle = "Green";
-                //		    } else {
-                //		        ctx.fillStyle = "#FFFFFF";
-                //		    }
+                    ctx.fillStyle = radgrad;
+                    ctx.fillRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
 
 
-                //		    ctx.fillRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
-
-
-                var radgrad = ctx.createRadialGradient(s.x + 2, s.y + 3, 1, s.x + 5, s.y + 5, 5);
-
-                radgrad.addColorStop(0, '#A7D30C');
-                radgrad.addColorStop(0.9, '#019F62');
-                radgrad.addColorStop(1, 'rgba(1,159,98,0)');
-
-
-
-                ctx.fillStyle = radgrad;
-                ctx.fillRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
-
+                }
 
 
                 ctx.textAlign = "left";
                 ctx.textBaseline = "top";
                 ctx.font = "16px Verdana, sans-serif";
-                ctx.fillStyle = "#000000";
+                ctx.fillStyle = "#FFFFFF";
                 ctx.font = "16px Verdana, sans-serif";
                 var text = typeof (node.data.label) !== 'undefined' ? node.data.label : node.id;
                 ctx.fillText(text, s.x - boxWidth / 2 + 5, s.y - 8);

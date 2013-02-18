@@ -556,14 +556,23 @@ Layout.ForceDirected.Spring = function(point1, point2, length, k) {
 
 
 
-var mapHandler = function(currentBB, graph){
-    
-    //this.graph =graph;
-    this.currentBB = currentBB;
-    
+var mapHandler = function (layout) {
+
+    this.layout = layout;
+    //this.graph = graph;
+
+    this.currentBB = layout.getBoundingBox();
+
+
+
+
     // graph size 
-    this.graph_width = 1300;
-    this.graph_height = 1000;
+    this.original_graph_width = 1300;
+    this.original_graph_height = 1000;
+
+    // graph size 
+    this.graph_width = this.original_graph_width;
+    this.graph_height = this.original_graph_height;
 
     //display size
     this.display_width = window.innerWidth + 500;
@@ -591,181 +600,344 @@ var mapHandler = function(currentBB, graph){
     this.mouseYPercLocat = 0.0;
 
     this.percX1 = 0.0;
-    this.percY1 = 0.0; 
+    this.percY1 = 0.0;
 
+    // zoom level
+    this.zoompercentage = 0;
+
+    //info tracker 
+    this.infoDisplayed = new Array();
 };
 
 
-    mapHandler.prototype = {
-        
-        SetCentrePoint:function (param_x, param_y) {
-            if (param_x == 1000000 && param_y == 1000000) {
-                this.centrePointXOffset = 0;
-                this.centrePointYOffset = 0;
+mapHandler.prototype = {
+
+    SetCentrePoint: function (param_x, param_y) {
+        if (param_x == 1000000 && param_y == 1000000) {
+            this.centrePointXOffset = 0;
+            this.centrePointYOffset = 0;
+        }
+        else {
+            if (this.centrePointXOffset === 0) {
+                this.centrePointXOffset = this.centrePoint - param_x;
             }
             else {
-                if (this.centrePointXOffset === 0) {
-                    this.centrePointXOffset = this.centrePoint - param_x;
-                }
-                else {
 
-                    this.centrePoint = param_x + this.centrePointXOffset;
-                }
-                if (this.centrePointYOffset === 0) {
-                    this.centrePointYOffset = this.centreVerticalPoint - param_y;
-                }
-                else {
-
-                    this.centreVerticalPoint = param_y + this.centrePointYOffset;
-                }
+                this.centrePoint = param_x + this.centrePointXOffset;
             }
-        },
-        SetZoomStart: function () {
+            if (this.centrePointYOffset === 0) {
+                this.centrePointYOffset = this.centreVerticalPoint - param_y;
+            }
+            else {
+
+                this.centreVerticalPoint = param_y + this.centrePointYOffset;
+            }
+        }
+    },
+    SetZoomStart: function () {
+        this.GetPercDistances();
+        this.mouseXPercLocat = this.percX1;
+        this.mouseYPercLocat = this.percY1;
+    },
+    GetPercDistances: function () {
+
+
+        var _distanceFromX1 = 0.0;
+        var _distanceFromY1 = 0.0;
+        var _onePercentDistance = 0.0;
+
+        this.percX1 = 0.0;
+        this.percY1 = 0.0;
+
+
+
+        //   this.drawingWidth = this.drawingX2 - this.drawingX1;
+        //  this.drawingHeight = this.drawingY2 - this.drawingY1;
+
+
+
+        if (this.graph_width !== 0 && this.graph_height !== 0) {
+            if (this.centrePoint > 0) {
+                _distanceFromX1 = this.mouse_x - this.centrePoint; //;
+            }
+            else {
+                _distanceFromX1 = Math.abs(this.centrePoint) + this.mouse_x;
+            }
+
+            _onePercentDistance = this.graph_width / 100;
+            this.percX1 = _distanceFromX1 / _onePercentDistance;
+
+            if (this.centreVerticalPoint > 0) {
+                _distanceFromY1 = this.mouse_y - this.centreVerticalPoint; // ;                
+            }
+            else {
+                _distanceFromY1 = Math.abs(this.centreVerticalPoint) + this.mouse_y;
+            }
+
+            _onePercentDistance = this.graph_height / 100;
+            this.percY1 = _distanceFromY1 / _onePercentDistance;
+
+        }
+
+
+    },
+    UpdatePosition: function (_dir) {
+
+        var increment = 2;
+
+        if (_dir == 'SOUTH') {
+            this.centreVerticalPoint -= increment;
+        }
+        if (_dir == 'NORTH') {
+            this.centreVerticalPoint += increment;
+        }
+        if (_dir == 'EAST') {
+            this.centrePoint += increment;
+        }
+        if (_dir == 'WEST') {
+
+            this.centrePoint -= increment;
+        }
+        if (_dir == 'UP' || _dir == 'DOWN') {
+
+            this.mouse_x = this.screenWidth / 2;
+            this.mouse_y = this.screenHeight / 2;
+
             this.GetPercDistances();
+
             this.mouseXPercLocat = this.percX1;
             this.mouseYPercLocat = this.percY1;
-        },
-        GetPercDistances: function () {
 
+            // zero the centre point 
+            this.SetCentrePoint(1000000, 1000000);
 
-            var _distanceFromX1 = 0.0;
-            var _distanceFromY1 = 0.0;
-            var _onePercentDistance = 0.0;
-
-            this.percX1 = 0.0;
-            this.percY1 = 0.0;
-
-
-
-            //   this.drawingWidth = this.drawingX2 - this.drawingX1;
-            //  this.drawingHeight = this.drawingY2 - this.drawingY1;
-
-
-
-            if (this.graph_width !== 0 && this.graph_height !== 0) {
-                if (this.centrePoint > 0) {
-                    _distanceFromX1 = this.mouse_x - this.centrePoint; //;
-                }
-                else {
-                    _distanceFromX1 = Math.abs(this.centrePoint) + this.mouse_x;
-                }
-
-                _onePercentDistance = this.graph_width / 100;
-                this.percX1 = _distanceFromX1 / _onePercentDistance;
-
-                if (this.centreVerticalPoint > 0) {
-                    _distanceFromY1 = this.mouse_y - this.centreVerticalPoint; // ;                
-                }
-                else {
-                    _distanceFromY1 = Math.abs(this.centreVerticalPoint) + this.mouse_y;
-                }
-
-                _onePercentDistance = this.graph_height / 100;
-                this.percY1 = _distanceFromY1 / _onePercentDistance;
-
+            if (_dir == 'UP') {
+                this.graph_width += 50;
+                this.graph_height += 50;
+            } else {
+                this.graph_width -= 50;
+                this.graph_height -= 50;
             }
 
-
-        },
-        UpdatePosition:function(_dir){
-            
-            var increment = 2;
-            
-            if (_dir == 'SOUTH') {
-                this.centreVerticalPoint -= increment;
-            }
-            if (_dir == 'NORTH') {
-                this.centreVerticalPoint += increment;
-            }
-            if (_dir == 'EAST') {
-                this.centrePoint += increment;
-            }
-            if (_dir == 'WEST') {
-
-                this.centrePoint -= increment;
-            }
-            if (_dir == 'UP' || _dir == 'DOWN') {
-
-                this.mouse_x = this.screenWidth / 2;
-                this.mouse_y = this.screenHeight / 2;
-
-                this.GetPercDistances();
-
-                this.mouseXPercLocat = this.percX1;
-                this.mouseYPercLocat = this.percY1;
-
-                // zero the centre point 
-                this.SetCentrePoint(1000000, 1000000);
-
-                if (_dir == 'UP') {
-                    this.graph_width += 50;
-                    this.graph_height += 50;
-                } else {
-                    this.graph_width -= 50;
-                    this.graph_height -= 50;
-                }
-
-                this.GetPercDistances();
+            this.GetPercDistances();
 
 
-                //console.log('y zoom ' + percY1 + ' ' + mouseYPercLocat);
-                this.centreVerticalPoint += (this.graph_height / 100) * (this.percY1 - this.mouseYPercLocat);
-                //console.log('x zoom ' + percX1 + ' ' + mouseXPercLocat);
+            //console.log('y zoom ' + percY1 + ' ' + mouseYPercLocat);
+            this.centreVerticalPoint += (this.graph_height / 100) * (this.percY1 - this.mouseYPercLocat);
+            //console.log('x zoom ' + percX1 + ' ' + mouseXPercLocat);
 
-                this.centrePoint += (this.graph_width / 100) * (this.percX1 - this.mouseXPercLocat);
-            }
-
-        },
-
-        zoomCurrentBB: function (targetBB, amount) {
-
-            this.currentBB = {
-                bottomleft: this.currentBB.bottomleft.add(targetBB.bottomleft.subtract(this.currentBB.bottomleft)
-    			.divide(amount)),
-                topright: this.currentBB.topright.add(targetBB.topright.subtract(this.currentBB.topright)
-				.divide(amount))
-            };
-
-
-        },
-        
-        currentPositionFromScreen:function(pos,e){
-            var utils = new Utils(this.currentBB, this.graph_width, this.graph_height);                
-             var p = utils.fromScreen({ x: (e.pageX - this.centrePoint) - pos.left, y: (e.pageY - this.centreVerticalPoint) - pos.top });            
-             return p;
-        },
-        currentPositionToScreen:function(pos,e){
-            var utils = new Utils(this.currentBB, this.graph_width, this.graph_height);             
-             var p = utils.toScreen({ x: (e.pageX - this.centrePoint) - pos.left, y: (e.pageY - this.centreVerticalPoint) - pos.top });            
-             return p;
-        },
-        
-        addToMouseQueue: function(x,y){            
-            var _point = new Array(x, y);
-            this.mouseQueue[this.mouseQueue.length] = _point;            
-        },
-       
-        validToDraw:function(x1,y1){
-            
-            var validDraw =true;
-            
-            if ( x1 > this.display_width) validDraw = false;
-    	    if ( x1 < -500) validDraw = false;
-            if ( y1 > this.display_height) validDraw = false;
-            if ( y1 < -500) validDraw = false;
-            
-            return validDraw;    
-        },
-        mapOffset:function(v1){
-            
-            v1.x += this.centrePoint;
-		    v1.y += this.centreVerticalPoint;
-            
-            return v1;
+            this.centrePoint += (this.graph_width / 100) * (this.percX1 - this.mouseXPercLocat);
         }
- 
 
-    };
+        if (_dir == 'DEBUG') {
+
+            console.log('debug: ' + this.onscreenNodes(25));
+        }
+        var old_area = this.original_graph_width * this.original_graph_height;
+        var new_area = this.graph_width * this.graph_height;
+        this.zoompercentage = (new_area - old_area) / old_area * 100;
+
+        $('#map_zoom').html(Math.round(this.zoompercentage));
+        $('#map_X').html(Math.round(this.centrePoint));
+        $('#map_Y').html(Math.round(this.centreVerticalPoint));
+    },
+
+    zoomCurrentBB: function (targetBB, amount) {
+
+        this.currentBB = {
+            bottomleft: this.currentBB.bottomleft.add(targetBB.bottomleft.subtract(this.currentBB.bottomleft)
+    			.divide(amount)),
+            topright: this.currentBB.topright.add(targetBB.topright.subtract(this.currentBB.topright)
+				.divide(amount))
+        };
+
+
+    },
+
+    currentPositionFromScreen: function (pos, e) {
+        var utils = new Utils(this.currentBB, this.graph_width, this.graph_height);
+        var p = utils.fromScreen({ x: (e.pageX - this.centrePoint) - pos.left, y: (e.pageY - this.centreVerticalPoint) - pos.top });
+        return p;
+    },
+    currentPositionToScreen: function (pos, e) {
+        var utils = new Utils(this.currentBB, this.graph_width, this.graph_height);
+        var p = utils.toScreen({ x: (e.pageX - this.centrePoint) - pos.left, y: (e.pageY - this.centreVerticalPoint) - pos.top });
+        return p;
+    },
+
+
+    addToMouseQueue: function (x, y) {
+        var _point = new Array(x, y);
+        this.mouseQueue[this.mouseQueue.length] = _point;
+    },
+
+    validToDraw: function (x1, y1, margin) {
+
+        var validDraw = true;
+
+        if (margin == undefined) margin = 500;
+
+        if (x1 > (this.display_width + margin)) validDraw = false;
+        if (x1 < (0 - margin)) validDraw = false;
+        if (y1 > (this.display_height + margin)) validDraw = false;
+        if (y1 < (0 - margin)) validDraw = false;
+
+        return validDraw;
+    },
+    mapOffset: function (v1) {
+
+        v1.x += this.centrePoint;
+        v1.y += this.centreVerticalPoint;
+
+        return v1;
+    },
+    onscreenNodes: function (maxnumber) {
+
+        var that = this;
+        var countonscreen = 0;
+        var onscreenNodes = new Array();
+        var offscreenNodes = new Array();
+        var maxNodes = false;
+
+
+        //console.log('debug');
+
+        this.layout.eachNode(function (node, point) {
+
+            //console.log(node.data.label);
+            var _utils = new Utils(that.currentBB, that.graph_width, that.graph_height);
+
+            var x1 = that.mapOffset(_utils.toScreen(point.p)).x;
+            var y1 = that.mapOffset(_utils.toScreen(point.p)).y;
+
+            if (that.validToDraw(x1, y1, 0)) {
+
+
+                onscreenNodes.push(node);
+
+                if (node.data.type == undefined)
+                    countonscreen++;
+
+
+            }
+            else {
+
+                if (!that.validToDraw(x1, y1, 500)) {
+                    if (node.data.type == undefined)
+                        offscreenNodes.push(node);
+                }
+            }
+
+            if (countonscreen > maxnumber) {
+                maxNodes = true;
+
+            }
+
+            // console.log(node.data.label + ' - ' + x1 + ' ' + y1);
+        });
+
+
+        if (!maxNodes) {
+            // add onscreen nodes
+            onscreenNodes.forEach(function (entry) {
+                // console.log(entry.data.label);
+
+                if (entry.data.person != undefined) {
+
+                    // if info hasnt already been display for this person
+                    if ($.inArray(entry.data.person.PersonId, that.infoDisplayed) < 0) {
+
+                        that.infoDisplayed.push(entry.data.person.PersonId);
+
+                        //console.log('adding ' + entry.data.person.Name + ' ' + that.infoDisplayed.length);
+
+                        var nameNode = that.layout.graph.newNode({
+                            label: entry.data.person.Name,
+                            parentId: entry.data.person.PersonId,
+                            type: 'infonode'
+                        });
+
+                        that.layout.graph.newEdge(entry, nameNode, { color: 'purple' });
+
+
+                        var dobNode = that.layout.graph.newNode({
+                            label: 'dob: ' + entry.data.person.DOB,
+                            parentId: entry.data.person.PersonId,
+                            type: 'infonode'
+                        });
+
+                        that.layout.graph.newEdge(entry, dobNode, { color: 'purple' });
+
+
+                        var dodNode = that.layout.graph.newNode({
+                            label: 'dod:' + entry.data.person.DOD,
+                            parentId: entry.data.person.PersonId,
+                            type: 'infonode'
+                        });
+
+                        that.layout.graph.newEdge(entry, dodNode, { color: 'purple' });
+
+
+                        var birthNode = that.layout.graph.newNode({
+                            label: 'born: ' + entry.data.person.BirthLocation,
+                            parentId: entry.data.person.PersonId,
+                            type: 'infonode'
+                        });
+
+                        that.layout.graph.newEdge(entry, birthNode, { color: 'purple' });
+
+
+                        var deathNode = that.layout.graph.newNode({
+                            label: 'died: ' + entry.data.person.DeathLocation,
+                            parentId: entry.data.person.PersonId,
+                            type: 'infonode'
+                        });
+
+                        that.layout.graph.newEdge(entry, deathNode, { color: 'purple' });
+                    }
+                }
+            });
+
+            // delete offscreen nodes
+            offscreenNodes.forEach(function (entry) {
+                // is there an entry for this person in the infodisplayed array
+                that.layout.eachNode(function (node, point) {
+
+                    if (node.data.parentId != undefined &&
+                            node.data.parentId == entry.data.person.PersonId) {
+                        // then remove node from nodes list
+                        that.layout.graph.removeNode(node);
+                    }
+                });
+                // person will be undefined for infonode nodes and they wont have an entry in the infodisplayed array anyway.
+                if (entry.data.person != undefined) {
+                    var aloc = $.inArray(entry.data.person.PersonId, that.infoDisplayed);
+
+                    // if so delete it
+                    if (aloc >= 0) {
+                        that.infoDisplayed.splice(aloc, 1);
+                    }
+                }
+            });
+        }
+        else {
+
+            that.infoDisplayed = new Array();
+
+            // ok so just delete all the information nodes
+            // because we're zoomed too far out
+            that.layout.eachNode(function (node, point) {
+
+                if (node.data.type != undefined && node.data.type == 'infonode')
+                    that.layout.graph.removeNode(node);
+            });
+        }
+
+        return countonscreen;
+    }
+
+
+};
 
 
 
