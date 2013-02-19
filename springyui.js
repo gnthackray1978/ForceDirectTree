@@ -437,8 +437,24 @@ OTHER DEALINGS IN THE SOFTWARE.
 
                     ctx.fillRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
 
+
+                    ctx.textAlign = "left";
+                    ctx.textBaseline = "top";
+                    ctx.font = "16px Verdana, sans-serif";
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.font = "16px Verdana, sans-serif";
+
+                    var text = typeof (node.data.label) !== 'undefined' ? node.data.label : node.id;
+
+
+                    ctx.fillText(text, s.x - boxWidth / 2 + 5, s.y - 8);
+
                 }
                 else {
+
+
+
+
                     var radgrad = ctx.createRadialGradient(s.x + 2, s.y + 3, 1, s.x + 5, s.y + 5, 5);
 
                     radgrad.addColorStop(0, '#A7D30C');
@@ -450,17 +466,37 @@ OTHER DEALINGS IN THE SOFTWARE.
                     ctx.fillStyle = radgrad;
                     ctx.fillRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
 
+                    var displayText = '';
+                    if (node.data.person != undefined) {
+                        if (node.data.person.DescendentCount > 10) {
+                            displayText = node.data.person.Name;
+
+                            ctx.textAlign = "left";
+                            ctx.textBaseline = "top";
+                            ctx.font = "16px Verdana, sans-serif";
+                            ctx.fillStyle = "#FFFFFF";
+                            ctx.font = "16px Verdana, sans-serif";
+
+                            var text = displayText;
+
+                            var width = ctx.measureText(text).width + 10;
+
+
+                            ctx.fillText(text, s.x - width / 2 + 5, s.y - 8);
+
+                        }
+
+
+
+                    }
+
 
                 }
 
 
-                ctx.textAlign = "left";
-                ctx.textBaseline = "top";
-                ctx.font = "16px Verdana, sans-serif";
-                ctx.fillStyle = "#FFFFFF";
-                ctx.font = "16px Verdana, sans-serif";
-                var text = typeof (node.data.label) !== 'undefined' ? node.data.label : node.id;
-                ctx.fillText(text, s.x - boxWidth / 2 + 5, s.y - 8);
+
+
+
 
                 ctx.restore();
             }

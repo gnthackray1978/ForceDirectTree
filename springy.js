@@ -851,49 +851,56 @@ mapHandler.prototype = {
 
                         //console.log('adding ' + entry.data.person.Name + ' ' + that.infoDisplayed.length);
 
-                        var nameNode = that.layout.graph.newNode({
-                            label: entry.data.person.Name,
-                            parentId: entry.data.person.PersonId,
-                            type: 'infonode'
-                        });
 
-                        that.layout.graph.newEdge(entry, nameNode, { color: 'purple' });
+                        if (entry.data.person.Name != '') {
+                            var nameNode = that.layout.graph.newNode({
+                                label: entry.data.person.Name,
+                                parentId: entry.data.person.PersonId,
+                                type: 'infonode'
+                            });
 
+                            that.layout.graph.newEdge(entry, nameNode, { color: 'purple' });
+                        }
 
-                        var dobNode = that.layout.graph.newNode({
-                            label: 'dob: ' + entry.data.person.DOB,
-                            parentId: entry.data.person.PersonId,
-                            type: 'infonode'
-                        });
+                        if (entry.data.person.DOB != '') {
+                            var dobNode = that.layout.graph.newNode({
+                                label: 'dob: ' + entry.data.person.DOB,
+                                parentId: entry.data.person.PersonId,
+                                type: 'infonode'
+                            });
 
-                        that.layout.graph.newEdge(entry, dobNode, { color: 'purple' });
+                            that.layout.graph.newEdge(entry, dobNode, { color: 'purple' });
+                        }
 
+                        if (entry.data.person.DOD != '') {
+                            var dodNode = that.layout.graph.newNode({
+                                label: 'dod:' + entry.data.person.DOD,
+                                parentId: entry.data.person.PersonId,
+                                type: 'infonode'
+                            });
 
-                        var dodNode = that.layout.graph.newNode({
-                            label: 'dod:' + entry.data.person.DOD,
-                            parentId: entry.data.person.PersonId,
-                            type: 'infonode'
-                        });
+                            that.layout.graph.newEdge(entry, dodNode, { color: 'purple' });
+                        }
 
-                        that.layout.graph.newEdge(entry, dodNode, { color: 'purple' });
+                        if (entry.data.person.BirthLocation != '') {
+                            var birthNode = that.layout.graph.newNode({
+                                label: 'born: ' + entry.data.person.BirthLocation,
+                                parentId: entry.data.person.PersonId,
+                                type: 'infonode'
+                            });
 
+                            that.layout.graph.newEdge(entry, birthNode, { color: 'purple' });
+                        }
 
-                        var birthNode = that.layout.graph.newNode({
-                            label: 'born: ' + entry.data.person.BirthLocation,
-                            parentId: entry.data.person.PersonId,
-                            type: 'infonode'
-                        });
+                        if (entry.data.person.DeathLocation != '') {
+                            var deathNode = that.layout.graph.newNode({
+                                label: 'died: ' + entry.data.person.DeathLocation,
+                                parentId: entry.data.person.PersonId,
+                                type: 'infonode'
+                            });
 
-                        that.layout.graph.newEdge(entry, birthNode, { color: 'purple' });
-
-
-                        var deathNode = that.layout.graph.newNode({
-                            label: 'died: ' + entry.data.person.DeathLocation,
-                            parentId: entry.data.person.PersonId,
-                            type: 'infonode'
-                        });
-
-                        that.layout.graph.newEdge(entry, deathNode, { color: 'purple' });
+                            that.layout.graph.newEdge(entry, deathNode, { color: 'purple' });
+                        }
                     }
                 }
             });
