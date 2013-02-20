@@ -44,34 +44,6 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 
-
-        //        while (genIdx < 8) {
-
-        //            var personIdx = 0;
-        //            var genArray = new Array();
-
-        //            while (personIdx < data.Generations[genIdx].length) {
-
-        //                var currentPerson = data.Generations[genIdx][personIdx];
-
-        //                if (!currentPerson.IsHtmlLink) {
-        //                    var descriptor = '.'; // currentPerson.DOB + ' ' + currentPerson.Name;
-
-        //                    data.Generations[genIdx][personIdx].nodeLink = graph.newNode({ label: descriptor });
-
-        //                    if (genIdx > 0) {
-        //                        var fatherNode = data.Generations[genIdx - 1][currentPerson.FatherIdx].nodeLink;
-        //                        graph.newEdge(fatherNode, currentPerson.nodeLink, { color: '#99CCFF' });
-        //                    }
-        //                }
-
-        //                personIdx++;
-        //            }
-
-        //            genIdx++;
-        //        }
-
-
         var myVar;
         var year = 1660;
 
@@ -98,8 +70,9 @@ OTHER DEALINGS IN THE SOFTWARE.
                     if (!currentPerson.IsHtmlLink) {
                         var descriptor = '.'; // currentPerson.DOB + ' ' + currentPerson.Name;
 
-                        var _dob = data.Generations[genIdx][personIdx].DOB;
 
+                        // add the person to the graph if he/she was born in the current time period
+                        var _dob = data.Generations[genIdx][personIdx].DOB;
                         if (_dob == (year - 4) || _dob == (year - 3) || _dob == (year - 2) || _dob == (year - 1) || _dob == year) {
 
                             var personPresent = false;
@@ -123,7 +96,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
                                 if (genIdx > 0) {
                                     var fatherNode = data.Generations[genIdx - 1][currentPerson.FatherIdx].nodeLink;
-                                    graph.newEdge(fatherNode, currentPerson.nodeLink, { color: '#99CCFF' });
+                                    graph.newEdge(fatherNode, currentPerson.nodeLink, { type: 'person', color: '#99CCFF' });
                                 }
 
                             }
@@ -132,6 +105,11 @@ OTHER DEALINGS IN THE SOFTWARE.
                             }
                         }
 
+
+                        // count how many desendants this person has in the diagram already.
+                        if (data.Generations[genIdx][personIdx].nodeLink != undefined
+                         && data.Generations[genIdx][personIdx].nodeLink.data.person != undefined)
+                            data.Generations[genIdx][personIdx].nodeLink.data.person.currentDescendantCount = countDescendants(data, genIdx, personIdx);
                     }
 
                     personIdx++;
@@ -140,10 +118,57 @@ OTHER DEALINGS IN THE SOFTWARE.
                 genIdx++;
             }
 
+
+
+            // compute current number of descendants
+
+
+
+
+
+
+
+
+
             year += 5;
 
 
             if (year == '2000') myStopFunction();
+        }
+
+
+        function countDescendants(data, genidx, personidx) {
+
+            //   var genIdx = 0;
+
+            var stack = new Array();
+            var count = 0;
+            stack.push(data.Generations[genidx][personidx]);
+
+
+            while (stack.length > 0) {
+
+                var current = stack.pop();
+                count++;
+                var personIdx = 0;
+
+                var nextGen = current.GenerationIdx + 1;
+
+                if (nextGen < data.Generations.length) {
+
+                    while (personIdx < data.Generations[nextGen].length) {
+                        if (data.Generations[nextGen][personIdx].FatherId == current.PersonId &&
+                        data.Generations[nextGen][personIdx].nodeLink != undefined)
+                            stack.push(data.Generations[nextGen][personIdx]);
+
+                        personIdx++;
+                    }
+
+                }
+                //  genIdx++;
+            }
+
+            return count;
         }
 
         function myStopFunction() {
@@ -345,7 +370,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                     intersection = s2;
                 }
 
-                var stroke = typeof (edge.data.color) !== 'undefined' ? edge.data.color : '#000000';
+
 
                 var arrowWidth;
                 var arrowLength;
@@ -366,7 +391,21 @@ OTHER DEALINGS IN THE SOFTWARE.
                     lineEnd = s2;
                 }
 
-                ctx.strokeStyle = stroke;
+
+                if (edge.data.type == 'data') {
+
+                    var stroke = typeof (edge.data.color) !== 'undefined' ? edge.data.color : '#000000';
+
+                    ctx.strokeStyle = stroke;
+                }
+                else {
+                    var grad = ctx.createLinearGradient(s1.x, s1.y, lineEnd.x, lineEnd.y);
+                    grad.addColorStop(0, "#0066FF");
+                    grad.addColorStop(1, "white");
+
+                    ctx.strokeStyle = grad;
+                }
+
                 ctx.beginPath();
                 ctx.moveTo(s1.x, s1.y);
                 ctx.lineTo(lineEnd.x, lineEnd.y);
@@ -441,7 +480,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                     ctx.textAlign = "left";
                     ctx.textBaseline = "top";
                     ctx.font = "16px Verdana, sans-serif";
-                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillStyle = "green";
                     ctx.font = "16px Verdana, sans-serif";
 
                     var text = typeof (node.data.label) !== 'undefined' ? node.data.label : node.id;
@@ -469,12 +508,12 @@ OTHER DEALINGS IN THE SOFTWARE.
                     var displayText = '';
                     if (node.data.person != undefined) {
                         if (node.data.person.DescendentCount > 10) {
-                            displayText = node.data.person.Name;
+                            displayText = node.data.person.Name + ' ' + node.data.person.currentDescendantCount;
 
                             ctx.textAlign = "left";
                             ctx.textBaseline = "top";
                             ctx.font = "16px Verdana, sans-serif";
-                            ctx.fillStyle = "#FFFFFF";
+                            ctx.fillStyle = "green";
                             ctx.font = "16px Verdana, sans-serif";
 
                             var text = displayText;

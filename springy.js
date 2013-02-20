@@ -859,7 +859,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, nameNode, { color: 'purple' });
+                            that.layout.graph.newEdge(entry, nameNode, { type: 'data', color: 'purple' });
                         }
 
                         if (entry.data.person.DOB != '') {
@@ -869,7 +869,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, dobNode, { color: 'purple' });
+                            that.layout.graph.newEdge(entry, dobNode, { type: 'data', color: 'purple' });
                         }
 
                         if (entry.data.person.DOD != '') {
@@ -879,7 +879,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, dodNode, { color: 'purple' });
+                            that.layout.graph.newEdge(entry, dodNode, { type: 'data', color: 'purple' });
                         }
 
                         if (entry.data.person.BirthLocation != '') {
@@ -889,7 +889,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, birthNode, { color: 'purple' });
+                            that.layout.graph.newEdge(entry, birthNode, { type: 'data', color: 'purple' });
                         }
 
                         if (entry.data.person.DeathLocation != '') {
@@ -899,7 +899,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, deathNode, { color: 'purple' });
+                            that.layout.graph.newEdge(entry, deathNode, { type: 'data', color: 'purple' });
                         }
                     }
                 }
