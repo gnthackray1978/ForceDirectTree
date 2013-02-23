@@ -335,6 +335,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
                 var direction = new Vector(x2 - x1, y2 - y1);
+
+                // negate y
                 var normal = direction.normal().normalise();
 
                 var from = graph.getEdges(edge.source, edge.target);
@@ -372,50 +374,81 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 
+
                 var arrowWidth;
                 var arrowLength;
 
                 var weight = typeof (edge.data.weight) !== 'undefined' ? edge.data.weight : 1.0;
 
                 ctx.lineWidth = Math.max(weight * 2, 0.1);
-                arrowWidth = 1 + ctx.lineWidth;
-                arrowLength = 8;
+                arrowWidth = 10 + ctx.lineWidth;
+                arrowLength = 10;
 
                 var directional = typeof (edge.data.directional) !== 'undefined' ? edge.data.directional : true;
 
                 // line
                 var lineEnd;
-                if (directional) {
-                    lineEnd = intersection.subtract(direction.normalise().multiply(arrowLength * 0.5));
-                } else {
-                    lineEnd = s2;
-                }
+
+
+
+                var stroke = '';
+
+                //                if (directional) {
+                //                    var tpd = 0;
+                //                    tpd = direction.normalise().multiply(arrowLength * 0.5);
+                //                    lineEnd = intersection.subtract(tpd);
+
+                //                } else {
+
+                lineEnd = s2;
+                // }
+
+
+
+                var distance = s1.distance(s2);
+
+                
+
 
 
                 if (edge.data.type == 'data') {
-
-                    var stroke = typeof (edge.data.color) !== 'undefined' ? edge.data.color : '#000000';
-
-                    ctx.strokeStyle = stroke;
+                    stroke = typeof (edge.data.color) !== 'undefined' ? edge.data.color : '#000000';
                 }
                 else {
-                    var grad = ctx.createLinearGradient(s1.x, s1.y, lineEnd.x, lineEnd.y);
-                    grad.addColorStop(0, "#0066FF");
-                    grad.addColorStop(1, "white");
+                    //   var grad = ctx.createLinearGradient(s1.x, s1.y, lineEnd.x, lineEnd.y);
+                    //  grad.addColorStop(0, "#0066FF");
+                    //  grad.addColorStop(1, "white");
 
-                    ctx.strokeStyle = grad;
+
+                   // _utils.getLevel(260, averagedesc, ['', '', '', '']);
+                    var averagedesc = (edge.source.data.person.currentDescendantCount + edge.target.data.person.currentDescendantCount) / 2;
+                    stroke = _utils.getLevel(300, averagedesc, ['#0066FF', '#1975FF', '#3385FF', '#4D94FF', '#66A3FF', '#80B2FF', '#99C2FF', '#CCE0FF', '#E6F0FF']);
+
+
                 }
 
+
+                ctx.strokeStyle = stroke;
                 ctx.beginPath();
                 ctx.moveTo(s1.x, s1.y);
                 ctx.lineTo(lineEnd.x, lineEnd.y);
                 ctx.stroke();
 
+
+
+
+                //edge.source, edge.target
+                // console.log(distance);
+                //node.data.person.currentDescendantCount
+
+
                 // arrow
-                if (directional) {
+                if (directional && distance > 75) {
                     ctx.save();
                     ctx.fillStyle = stroke;
-                    ctx.translate(intersection.x, intersection.y);
+
+                    ctx.translate((intersection.x + s1.x) / 2, (intersection.y + s1.y) / 2);
+
                     ctx.rotate(Math.atan2(y2 - y1, x2 - x1));
                     ctx.beginPath();
                     ctx.moveTo(-arrowLength, arrowWidth);
@@ -496,8 +529,8 @@ OTHER DEALINGS IN THE SOFTWARE.
 
                     var radgrad = ctx.createRadialGradient(s.x + 2, s.y + 3, 1, s.x + 5, s.y + 5, 5);
 
-                    radgrad.addColorStop(0, '#A7D30C');
-                    radgrad.addColorStop(0.9, '#019F62');
+                    radgrad.addColorStop(0, '#CCFFFF');
+                    radgrad.addColorStop(0.9, 'FFFFFF');
                     radgrad.addColorStop(1, 'rgba(1,159,98,0)');
 
 

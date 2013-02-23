@@ -525,6 +525,16 @@ Vector.prototype.normalise = function() {
 	return this.divide(this.magnitude());
 };
 
+Vector.prototype.distance = function (d2) {
+
+    var x = d2.x - this.x;
+    x = x * x;
+
+    var y = d2.y - this.y;
+    y = y * y;
+
+    return Math.sqrt(x + y);
+};
 
 
 
@@ -859,7 +869,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, nameNode, { type: 'data', color: 'purple' });
+                            that.layout.graph.newEdge(entry, nameNode, { type: 'data', color: 'purple',directional:false });
                         }
 
                         if (entry.data.person.DOB != '') {
@@ -869,7 +879,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, dobNode, { type: 'data', color: 'purple' });
+                            that.layout.graph.newEdge(entry, dobNode, { type: 'data', color: 'purple', directional: false });
                         }
 
                         if (entry.data.person.DOD != '') {
@@ -879,7 +889,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, dodNode, { type: 'data', color: 'purple' });
+                            that.layout.graph.newEdge(entry, dodNode, { type: 'data', color: 'purple', directional: false });
                         }
 
                         if (entry.data.person.BirthLocation != '') {
@@ -889,7 +899,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, birthNode, { type: 'data', color: 'purple' });
+                            that.layout.graph.newEdge(entry, birthNode, { type: 'data', color: 'purple', directional: false });
                         }
 
                         if (entry.data.person.DeathLocation != '') {
@@ -899,7 +909,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, deathNode, { type: 'data', color: 'purple' });
+                            that.layout.graph.newEdge(entry, deathNode, { type: 'data', color: 'purple', directional: false });
                         }
                     }
                 }
@@ -997,53 +1007,75 @@ function Utils(currentBB, gwidth,hwidth){
 }
 
 Utils.prototype = {
-    
-        toScreen:function (p) {
-            var size = this.currentBB.topright.subtract(this.currentBB.bottomleft);
-            var sx = p.subtract(this.currentBB.bottomleft).divide(size.x).x * this.graph_width;
-            var sy = p.subtract(this.currentBB.bottomleft).divide(size.y).y * this.graph_height;
-            return new Vector(sx, sy);
-        },
 
-        fromScreen:function (s) {
-            var size = this.currentBB.topright.subtract(this.currentBB.bottomleft);
-            var px = (s.x / this.graph_width) * size.x + this.currentBB.bottomleft.x;
-            var py = (s.y / this.graph_height) * size.y + this.currentBB.bottomleft.y;
-            return new Vector(px, py);
-        },
-        intersect_line_line: function(p1, p2, p3, p4) {
-            var denom = ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
+    toScreen: function (p) {
+        var size = this.currentBB.topright.subtract(this.currentBB.bottomleft);
+        var sx = p.subtract(this.currentBB.bottomleft).divide(size.x).x * this.graph_width;
+        var sy = p.subtract(this.currentBB.bottomleft).divide(size.y).y * this.graph_height;
+        return new Vector(sx, sy);
+    },
 
-            // lines are parallel
-            if (denom === 0) {
-                return false;
-            }
+    fromScreen: function (s) {
+        var size = this.currentBB.topright.subtract(this.currentBB.bottomleft);
+        var px = (s.x / this.graph_width) * size.x + this.currentBB.bottomleft.x;
+        var py = (s.y / this.graph_height) * size.y + this.currentBB.bottomleft.y;
+        return new Vector(px, py);
+    },
+    intersect_line_line: function (p1, p2, p3, p4) {
+        var denom = ((p4.y - p3.y) * (p2.x - p1.x) - (p4.x - p3.x) * (p2.y - p1.y));
 
-            var ua = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / denom;
-            var ub = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / denom;
-
-            if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
-                return false;
-            }
-
-            return new Vector(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
-        },
-
-        intersect_line_box: function(p1, p2, p3, w, h) {
-            var tl = { x: p3.x, y: p3.y };
-            var tr = { x: p3.x + w, y: p3.y };
-            var bl = { x: p3.x, y: p3.y + h };
-            var br = { x: p3.x + w, y: p3.y + h };
-
-            var result;
-            if (result = this.intersect_line_line(p1, p2, tl, tr)) { return result; } // top
-            if (result = this.intersect_line_line(p1, p2, tr, br)) { return result; } // right
-            if (result = this.intersect_line_line(p1, p2, br, bl)) { return result; } // bottom
-            if (result = this.intersect_line_line(p1, p2, bl, tl)) { return result; } // left
-
+        // lines are parallel
+        if (denom === 0) {
             return false;
         }
-    
+
+        var ua = ((p4.x - p3.x) * (p1.y - p3.y) - (p4.y - p3.y) * (p1.x - p3.x)) / denom;
+        var ub = ((p2.x - p1.x) * (p1.y - p3.y) - (p2.y - p1.y) * (p1.x - p3.x)) / denom;
+
+        if (ua < 0 || ua > 1 || ub < 0 || ub > 1) {
+            return false;
+        }
+
+        return new Vector(p1.x + ua * (p2.x - p1.x), p1.y + ua * (p2.y - p1.y));
+    },
+
+    intersect_line_box: function (p1, p2, p3, w, h) {
+        var tl = { x: p3.x, y: p3.y };
+        var tr = { x: p3.x + w, y: p3.y };
+        var bl = { x: p3.x, y: p3.y + h };
+        var br = { x: p3.x + w, y: p3.y + h };
+
+        var result;
+        if (result = this.intersect_line_line(p1, p2, tl, tr)) { return result; } // top
+        if (result = this.intersect_line_line(p1, p2, tr, br)) { return result; } // right
+        if (result = this.intersect_line_line(p1, p2, br, bl)) { return result; } // bottom
+        if (result = this.intersect_line_line(p1, p2, bl, tl)) { return result; } // left
+
+        return false;
+    },
+
+    getLevel: function (count, number, data) {
+
+        var idx = 0;
+        var chunk = count / data.length;
+        var chunkIdx = chunk;
+        var idx = 0;
+        var selectedIdx = 0;
+        while (idx < data.length) {
+
+            var bottom = chunkIdx - chunk;
+
+            if (number >= bottom && number < chunkIdx) {
+                selectedIdx = idx;
+            }
+
+            idx++;
+            chunkIdx += chunk;
+        }
+
+        return data[selectedIdx];
+    }
+
 }
 
 
