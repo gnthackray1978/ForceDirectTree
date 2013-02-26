@@ -90,13 +90,13 @@ OTHER DEALINGS IN THE SOFTWARE.
 
                                     addedPeople.push(data.Generations[genIdx][personIdx].PersonId);
 
-                                    data.Generations[genIdx][personIdx].nodeLink = graph.newNode({ label: descriptor, person: data.Generations[genIdx][personIdx] });
+                                    data.Generations[genIdx][personIdx].nodeLink = graph.newNode({ label: descriptor, person: data.Generations[genIdx][personIdx], type: 'normal' });
                                 }
 
 
                                 if (genIdx > 0) {
                                     var fatherNode = data.Generations[genIdx - 1][currentPerson.FatherIdx].nodeLink;
-                                    graph.newEdge(fatherNode, currentPerson.nodeLink, { type: 'person', color: '#99CCFF' });
+                                    graph.newEdge(fatherNode, currentPerson.nodeLink, { type: 'person' });
                                 }
 
                             }
@@ -107,8 +107,7 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
                         // count how many desendants this person has in the diagram already.
-                        if (data.Generations[genIdx][personIdx].nodeLink != undefined
-                         && data.Generations[genIdx][personIdx].nodeLink.data.person != undefined)
+                        if (data.Generations[genIdx][personIdx].nodeLink != undefined)
                             data.Generations[genIdx][personIdx].nodeLink.data.person.currentDescendantCount = countDescendants(data, genIdx, personIdx);
                     }
 
@@ -118,20 +117,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                 genIdx++;
             }
 
-
-
-            // compute current number of descendants
-
-
-
-
-
-
-
-
-
             year += 5;
-
 
             if (year == '2000') myStopFunction();
         }
@@ -185,9 +171,43 @@ OTHER DEALINGS IN THE SOFTWARE.
         var _dir = '';
 
 
+        var colourScheme = {
+            mapbackgroundColour: '#0A0A33',
+
+            normalMainLabelColour: 'white',
+            normalMainLabelBackground: '#0A0A33',
+            normalMainShapeBackground: 'purple',
+
+            selectedMainLabelColour: 'white',
+            selectedMainLabelBackground: '#0A0A33',
+            selectedMainShapeBackground: 'green',
+
+            nearestMainLabelColour: 'white',
+            nearestMainLabelBackground: '#0A0A33',
+            nearestMainShapeBackground: 'yellow',
 
 
-        var fdMapHandler = new mapHandler(layout);
+            normalInfoLabelColour: 'white',
+            normalInfoLabelBackground: '#0A0A33',
+
+            selectedInfoLabelColour: 'white',
+            selectedInfoLabelBackground: '#0A0A33',
+
+            nearestInfoLabelColour: 'white',
+            nearestInfoLabelBackground: '#0A0A33',
+
+
+            infoLineColour: 'blue',
+            normalLineGradient: ['#0066FF', '#1975FF', '#3385FF', '#4D94FF', '#66A3FF', '#80B2FF', '#99C2FF', '#CCE0FF', '#E6F0FF'],
+
+            shadowColour: 'black',
+           // maleColour: 'purple',
+        //    femaleColour: 'purple'
+        }
+
+        $('body').css("background-color", colourScheme.mapbackgroundColour);
+
+        var fdMapHandler = new mapHandler(layout, colourScheme);
 
         // auto adjusting bounding box
         Layout.requestAnimationFrame(function adjust() {
@@ -307,7 +327,37 @@ OTHER DEALINGS IN THE SOFTWARE.
             return 20;
         };
 
+        var getSelection = function (node) {
+            // 1 nothing 
+            // 2 nearest 
+            // 3 selected 
 
+
+            var selectedPersonId = '';
+            var nodePersonId ='';
+
+            if(selected != null && selected.node != undefined && selected.node.data != undefined  )
+            {
+                selectedPersonId = selected.node.data.person.PersonId;
+            }
+
+            if(node.data != undefined && node.data.person != undefined){
+                nodePersonId = node.data.person.PersonId;
+            }
+
+
+
+            if (selectedPersonId == nodePersonId)
+            { 
+                return 3;
+            }
+            else if (nearest !== null && nearest.node !== null && nearest.node.id === node.id) {
+                return 2;
+            } else {
+                return 1;
+            }
+
+        };
 
 
         var renderer = new Renderer(1, fdMapHandler, layout,
@@ -372,9 +422,6 @@ OTHER DEALINGS IN THE SOFTWARE.
                     intersection = s2;
                 }
 
-
-
-
                 var arrowWidth;
                 var arrowLength;
 
@@ -384,65 +431,25 @@ OTHER DEALINGS IN THE SOFTWARE.
                 arrowWidth = 10 + ctx.lineWidth;
                 arrowLength = 10;
 
-                var directional = typeof (edge.data.directional) !== 'undefined' ? edge.data.directional : true;
-
-                // line
-                var lineEnd;
-
-
 
                 var stroke = '';
-
-                //                if (directional) {
-                //                    var tpd = 0;
-                //                    tpd = direction.normalise().multiply(arrowLength * 0.5);
-                //                    lineEnd = intersection.subtract(tpd);
-
-                //                } else {
-
-                lineEnd = s2;
-                // }
-
-
-
-                var distance = s1.distance(s2);
-
-                
-
-
-
                 if (edge.data.type == 'data') {
-                    stroke = typeof (edge.data.color) !== 'undefined' ? edge.data.color : '#000000';
+                    stroke = map.colourScheme.infoLineColour;
                 }
-                else {
-                    //   var grad = ctx.createLinearGradient(s1.x, s1.y, lineEnd.x, lineEnd.y);
-                    //  grad.addColorStop(0, "#0066FF");
-                    //  grad.addColorStop(1, "white");
-
-
-                   // _utils.getLevel(260, averagedesc, ['', '', '', '']);
+                else {   
                     var averagedesc = (edge.source.data.person.currentDescendantCount + edge.target.data.person.currentDescendantCount) / 2;
-                    stroke = _utils.getLevel(300, averagedesc, ['#0066FF', '#1975FF', '#3385FF', '#4D94FF', '#66A3FF', '#80B2FF', '#99C2FF', '#CCE0FF', '#E6F0FF']);
-
-
+                    stroke = _utils.getLevel(300, averagedesc, map.colourScheme.normalLineGradient);
                 }
-
 
                 ctx.strokeStyle = stroke;
                 ctx.beginPath();
                 ctx.moveTo(s1.x, s1.y);
-                ctx.lineTo(lineEnd.x, lineEnd.y);
+                ctx.lineTo(s2.x, s2.y);
                 ctx.stroke();
 
-
-
-
-                //edge.source, edge.target
-                // console.log(distance);
-                //node.data.person.currentDescendantCount
-
-
                 // arrow
+                var distance = s1.distance(s2);
+                var directional = typeof (edge.data.directional) !== 'undefined' ? edge.data.directional : true;
                 if (directional && distance > 75) {
                     ctx.save();
                     ctx.fillStyle = stroke;
@@ -460,18 +467,41 @@ OTHER DEALINGS IN THE SOFTWARE.
                     ctx.restore();
                 }
 
-                // label
-                if (typeof (edge.data.label) !== 'undefined') {
-                    var text = edge.data.label
-                    ctx.save();
-                    ctx.textAlign = "center";
-                    ctx.textBaseline = "top";
-                    ctx.font = "10px Helvetica, sans-serif";
-                    ctx.fillStyle = "#5BA6EC";
-                    ctx.fillText(text, (x1 + x2) / 2, (y1 + y2) / 2);
-                    ctx.restore();
+              
+
+            },
+
+            function (node, p) {
+
+                var map = this.map;
+                var _utils = new Utils(this.map.currentBB, map.graph_width, map.graph_height);
+
+                var x1 = map.mapOffset(_utils.toScreen(p)).x;
+                var y1 = map.mapOffset(_utils.toScreen(p)).y;
+
+                if (!map.validToDraw(x1, y1)) return;
+
+                var s = map.mapOffset(_utils.toScreen(p));
+
+                ctx.save();
+
+                if (node.data.type != undefined && node.data.type == 'infonode') {
+                    _utils.drawText(map, ctx, s.x, s.y, node.data.label, node.data.type, getSelection(node));
+
+                }
+                else {
+
+                    _utils.star(map, ctx, s.x, s.y, 10, 5, 0.4, false, node.data.type, getSelection(node));
+
+                    if (node.data.person != undefined) {
+                        if (node.data.person.DescendentCount > 10 && _utils.validDisplayPeriod(node.data.person.DOB, year, 20)) {
+                            _utils.drawText(map, ctx, s.x, s.y, node.data.person.Name + ' ' + node.data.person.currentDescendantCount, node.data.type, getSelection(node));
+                        }
+                    }
+
                 }
 
+                ctx.restore();
             },
 
             function (node, p) {
@@ -493,82 +523,16 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
                 if (node.data.type != undefined && node.data.type == 'infonode') {
-                    boxWidth = node.getWidth();
-                    boxHeight = node.getHeight();
-                    ctx.clearRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
 
-                    // fill background
-                    if (selected !== null && selected.node !== null && nearest.node !== null && selected.node.id === node.id) {
-                        ctx.fillStyle = "Red";
-                    } else if (nearest !== null && nearest.node !== null && nearest.node.id === node.id) {
-                        ctx.fillStyle = "Green";
-                    } else {
-                        ctx.fillStyle = "#000000";
-                    }
-
-
-                    ctx.fillRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
-
-
-                    ctx.textAlign = "left";
-                    ctx.textBaseline = "top";
-                    ctx.font = "16px Verdana, sans-serif";
-                    ctx.fillStyle = "green";
-                    ctx.font = "16px Verdana, sans-serif";
-
-                    var text = typeof (node.data.label) !== 'undefined' ? node.data.label : node.id;
-
-
-                    ctx.fillText(text, s.x - boxWidth / 2 + 5, s.y - 8);
 
                 }
                 else {
 
-
-
-
-                    var radgrad = ctx.createRadialGradient(s.x + 2, s.y + 3, 1, s.x + 5, s.y + 5, 5);
-
-                    radgrad.addColorStop(0, '#CCFFFF');
-                    radgrad.addColorStop(0.9, 'FFFFFF');
-                    radgrad.addColorStop(1, 'rgba(1,159,98,0)');
-
-
-
-                    ctx.fillStyle = radgrad;
-                    ctx.fillRect(s.x - boxWidth / 2, s.y - 10, boxWidth, 20);
-
-                    var displayText = '';
-                    if (node.data.person != undefined) {
-                        if (node.data.person.DescendentCount > 10) {
-                            displayText = node.data.person.Name + ' ' + node.data.person.currentDescendantCount;
-
-                            ctx.textAlign = "left";
-                            ctx.textBaseline = "top";
-                            ctx.font = "16px Verdana, sans-serif";
-                            ctx.fillStyle = "green";
-                            ctx.font = "16px Verdana, sans-serif";
-
-                            var text = displayText;
-
-                            var width = ctx.measureText(text).width + 10;
-
-
-                            ctx.fillText(text, s.x - width / 2 + 5, s.y - 8);
-
-                        }
-
-
-
-                    }
-
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = "black";
+                    _utils.star(ctx, s.x - 7, s.y + 7, 15, 5, 0.7, 'black', true);
 
                 }
-
-
-
-
-
 
                 ctx.restore();
             }

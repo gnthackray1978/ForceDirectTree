@@ -566,7 +566,7 @@ Layout.ForceDirected.Spring = function(point1, point2, length, k) {
 
 
 
-var mapHandler = function (layout) {
+var mapHandler = function (layout, colourScheme) {
 
     this.layout = layout;
     //this.graph = graph;
@@ -574,10 +574,11 @@ var mapHandler = function (layout) {
     this.currentBB = layout.getBoundingBox();
 
 
+    this.colourScheme = colourScheme;
 
 
     // graph size 
-    this.original_graph_width = 1300;
+    this.original_graph_width = 1500;
     this.original_graph_height = 1000;
 
     // graph size 
@@ -789,6 +790,7 @@ mapHandler.prototype = {
 
         if (x1 > (this.display_width + margin)) validDraw = false;
         if (x1 < (0 - margin)) validDraw = false;
+       
         if (y1 > (this.display_height + margin)) validDraw = false;
         if (y1 < (0 - margin)) validDraw = false;
 
@@ -825,7 +827,7 @@ mapHandler.prototype = {
 
                 onscreenNodes.push(node);
 
-                if (node.data.type == undefined)
+                if (node.data.type == 'normal')
                     countonscreen++;
 
 
@@ -833,7 +835,7 @@ mapHandler.prototype = {
             else {
 
                 if (!that.validToDraw(x1, y1, 500)) {
-                    if (node.data.type == undefined)
+                    if (node.data.type == 'normal')
                         offscreenNodes.push(node);
                 }
             }
@@ -869,7 +871,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, nameNode, { type: 'data', color: 'purple',directional:false });
+                            that.layout.graph.newEdge(entry, nameNode, { type: 'data', directional:false });
                         }
 
                         if (entry.data.person.DOB != '') {
@@ -879,7 +881,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, dobNode, { type: 'data', color: 'purple', directional: false });
+                            that.layout.graph.newEdge(entry, dobNode, { type: 'data',  directional: false });
                         }
 
                         if (entry.data.person.DOD != '') {
@@ -889,7 +891,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, dodNode, { type: 'data', color: 'purple', directional: false });
+                            that.layout.graph.newEdge(entry, dodNode, { type: 'data', directional: false });
                         }
 
                         if (entry.data.person.BirthLocation != '') {
@@ -899,7 +901,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, birthNode, { type: 'data', color: 'purple', directional: false });
+                            that.layout.graph.newEdge(entry, birthNode, { type: 'data', directional: false });
                         }
 
                         if (entry.data.person.DeathLocation != '') {
@@ -909,7 +911,7 @@ mapHandler.prototype = {
                                 type: 'infonode'
                             });
 
-                            that.layout.graph.newEdge(entry, deathNode, { type: 'data', color: 'purple', directional: false });
+                            that.layout.graph.newEdge(entry, deathNode, { type: 'data', directional: false });
                         }
                     }
                 }
@@ -945,7 +947,7 @@ mapHandler.prototype = {
             // because we're zoomed too far out
             that.layout.eachNode(function (node, point) {
 
-                if (node.data.type != undefined && node.data.type == 'infonode')
+                if (node.data.type != 'normal')
                     that.layout.graph.removeNode(node);
             });
         }
@@ -969,12 +971,13 @@ mapHandler.prototype = {
 // };
 
 // Renderer handles the layout rendering loop
-function Renderer(interval,mapHandler, layout, clear, drawEdge, drawNode) {
+function Renderer(interval, mapHandler, layout, clear, drawEdge, drawNode, drawShadows) {
 	this.interval = interval;
 	this.layout = layout;
 	this.clear = clear;
 	this.drawEdge = drawEdge;
 	this.drawNode = drawNode;
+	this.drawShadows = drawShadows;
     this.map = mapHandler;
     
 	this.layout.graph.addGraphListener(this);
@@ -989,13 +992,19 @@ Renderer.prototype.start = function() {
 	this.layout.start(1, function render() {
 		t.clear();
 
+//		t.layout.eachNode(function (node, point) {
+//		    t.drawShadows(node, point.p);
+//		});
+
 		t.layout.eachEdge(function(edge, spring) {
 			t.drawEdge(edge, spring.point1.p, spring.point2.p);
 		});
 
 		t.layout.eachNode(function(node, point) {
 			t.drawNode(node, point.p);
-		});
+        });
+
+
 	});
 };
 
@@ -1074,7 +1083,128 @@ Utils.prototype = {
         }
 
         return data[selectedIdx];
+    },
+
+    validDisplayPeriod: function (dob, currentyear, offset) {
+        if (!dob) dob = 1600;
+        if (!currentyear) currentyear = 1600;
+        if (!offset) offset = 0;
+
+        var min = currentyear - offset;
+        var max = currentyear + offset;
+
+        return (dob >= min && dob <= max) ? true : false;
+    },
+
+
+    star: function (map, ctx, x, y, r, p, m, filled, type, state) {
+
+        //var radgrad = ctx.createRadialGradient(s.x + 2, s.y + 3, 1, s.x + 5, s.y + 5, 5);
+
+        //radgrad.addColorStop(0, '#CCFFFF');
+        //radgrad.addColorStop(0.9, 'FFFFFF');
+        //radgrad.addColorStop(1, 'rgba(1,159,98,0)');
+
+        var colour = '';
+
+        switch (state) {
+            case 1:
+                colour = map.colourScheme.normalMainShapeBackground;
+                break;
+            case 2:
+                colour = map.colourScheme.nearestMainShapeBackground;
+                break;
+            case 3:
+                colour = map.colourScheme.selectedMainShapeBackground;
+                break;
+        }
+
+        ctx.save();
+
+
+        ctx.beginPath();
+        ctx.translate(x, y);
+        ctx.moveTo(0, 0 - r);
+        for (var i = 0; i < p; i++) {
+            ctx.rotate(Math.PI / p);
+            ctx.lineTo(0, 0 - (r * m));
+            ctx.rotate(Math.PI / p);
+            ctx.lineTo(0, 0 - r);
+        }
+
+
+
+        if (filled) {
+
+            ctx.fillStyle = colour;
+            ctx.fill();
+
+        }
+        {
+            ctx.strokeStyle = colour;
+            ctx.lineWidth = 3;
+            ctx.stroke();
+        }
+
+        //whaeever
+        ctx.restore();
+    },
+
+
+
+    drawText: function (map, ctx, x, y, text, type, state) {
+
+        //boxWidth = node.getWidth();
+        //boxHeight = node.getHeight();
+
+        if (!type) type = 'normal';
+        if (!state) state = 1;
+        if (!text) text = '';
+
+        // 1 nothing 
+        // 2 nearest 
+        // 3 selected 
+
+        switch (state) {
+            case 1:
+                ctx.fillStyle = type == 'normal' ? map.colourScheme.normalMainLabelBackground : map.colourScheme.normalInfoLabelBackground;
+                break;
+            case 2:
+                ctx.fillStyle = type == 'normal' ? map.colourScheme.nearestMainLabelBackground : map.colourScheme.nearestInfoLabelBackground;
+                break;
+            case 3:
+                ctx.fillStyle = type == 'normal' ? map.colourScheme.selectedMainLabelBackground : map.colourScheme.selectedInfoLabelBackground;
+                break;
+        }
+
+        boxWidth = ctx.measureText(text).width + 10;
+
+        ctx.fillRect(x - boxWidth / 2, y - 10, boxWidth, 20);
+
+        ctx.textAlign = "left";
+        ctx.textBaseline = "top";
+
+        switch (state) {
+            case 1:
+                ctx.fillStyle = type == 'normal' ? map.colourScheme.normalMainLabelColour : map.colourScheme.normalInfoLabelColour;
+                break;
+            case 2:
+                ctx.fillStyle = type == 'normal' ? map.colourScheme.selectedMainLabelColour : map.colourScheme.selectedInfoLabelColour;
+                break;
+            case 3:
+                ctx.fillStyle = type == 'normal' ? map.colourScheme.nearestMainLabelColour : map.colourScheme.nearestInfoLabelColour;
+                break;
+        }
+
+        ctx.font = "16px Verdana, sans-serif";
+
+
+
+        ctx.fillText(text, x - boxWidth / 2 + 5, y - 8);
     }
+
+
+
 
 }
 

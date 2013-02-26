@@ -1,0 +1,101 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title></title>
+    <script src="jquery.js" type="text/javascript"></script>
+    <link href="tree.css" rel="stylesheet" type="text/css" />
+</head>
+<body style="background-color: black;">
+<div class = "map_year"><span>counter: </span><span id ="map_year" >100</span></div> 
+<canvas id="springydemo" width= "1000px" height = "1000px"/>
+  <script>
+      (function () {
+          var runCounter = 75;
+          var myVar = setInterval(function () { myTimer() }, 100);
+          var ctx = $('#springydemo')[0].getContext("2d");
+          var sign = 1;
+
+
+
+          function myTimer() {
+
+
+
+              $('#map_year').html(runCounter);
+
+              if (runCounter < 0 || runCounter > 75) {
+                  //    myStopFunction();
+                  sign = (sign == -1) ? 1 : -1;
+              }
+              runCounter += sign;
+
+              ctx.clearRect(0, 0, 1000, 1000); // clear canvas
+              ctx.shadowBlur = 10;
+              ctx.shadowColor = "white";
+
+              var size = (runCounter * 3);
+              var colour = 'red';
+
+              drawPolygon(100, 250, size, colour);
+
+              star(500, 250, size, 5, 0.4, colour);
+
+          };
+
+          function myStopFunction() {
+              clearInterval(myVar);
+          }
+
+
+
+
+
+          drawPolygon = function (x, y, size, colour) {
+
+
+              var numberOfSides = 5, Xcenter = x, Ycenter = y;
+
+
+              ctx.beginPath();
+              ctx.moveTo(Xcenter + size * Math.cos(0), Ycenter + size * Math.sin(0));
+
+              for (var i = 1; i <= numberOfSides; i += 1) {
+                  ctx.lineTo(Xcenter + size * Math.cos(i * 2 * Math.PI / numberOfSides), Ycenter + size * Math.sin(i * 2 * Math.PI / numberOfSides));
+              }
+
+              ctx.strokeStyle = colour;
+              ctx.lineWidth = 3;
+              ctx.stroke();
+          };
+
+          star = function (x, y, r, p, m, colour) {
+              ctx.save();
+
+
+              ctx.beginPath();
+              ctx.translate(x, y);
+              ctx.moveTo(0, 0 - r);
+              for (var i = 0; i < p; i++) {
+                  ctx.rotate(Math.PI / p);
+                  ctx.lineTo(0, 0 - (r * m));
+                  ctx.rotate(Math.PI / p);
+                  ctx.lineTo(0, 0 - r);
+              }
+
+              ctx.strokeStyle = colour;
+              ctx.lineWidth = 3;
+              ctx.stroke();
+
+              ctx.restore();
+          };
+
+
+
+
+
+
+      })()
+  </script>
+</body>
+</html>

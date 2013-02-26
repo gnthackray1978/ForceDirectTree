@@ -31,7 +31,7 @@ jQuery(function () {
                 graph: graph,
                 data:data,
                 nodeSelected: function (node) {
-                    console.log('Node selected: ' + JSON.stringify(node.data));
+                    console.log('Node selected: ' + node.data.person.Name);
                 }
             });
 
