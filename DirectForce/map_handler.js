@@ -241,19 +241,22 @@ mapHandler.prototype = {
 
     adjustPosition: function (_dir) {
 
-        this.targetBB = this.layout.getBoundingBox();
+        if (this.layout.parentNode == undefined) {
+            this.targetBB = this.layout.getBoundingBox();
 
 
 
-        // current gets 20% closer to target every iteration
-        this.zoomCurrentBB(this.targetBB, 10);
+            // current gets 20% closer to target every iteration
+            this.zoomCurrentBB(this.targetBB, 10);
 
-        while (this.mouseQueue.length > 0) {
-            var _point = this.mouseQueue.shift();
-            this.SetCentrePoint(_point[0], _point[1]);
+            while (this.mouseQueue.length > 0) {
+                var _point = this.mouseQueue.shift();
+                this.SetCentrePoint(_point[0], _point[1]);
+            }
+
+            this.UpdatePosition(_dir);
         }
 
-        this.UpdatePosition(_dir);
     }
 
 

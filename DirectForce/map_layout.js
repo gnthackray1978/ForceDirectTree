@@ -11,10 +11,11 @@
 // -----------
 var Layout = {};
 
-Layout.ForceDirected = function (graph, mapHandler, stiffness, repulsion, damping) {
+Layout.ForceDirected = function (graph, mapHandler, stiffness, repulsion, damping, parentNode) {
     this.selected = null;
     this.nearest = null;
     this.dragged = null;
+    this.parentNode = parentNode;
     this.mapHandler = mapHandler;
 
     this.canvasId = '#springydemo';

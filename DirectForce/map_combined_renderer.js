@@ -23,12 +23,7 @@ function CombinedRenderer(clear, layouts) {
 
   //  this.map = layout.mapHandler;
 
-    var idx = 0;
-
-    while (idx < layouts.length) {
-        layouts[idx].layout.graph.addGraphListener(this);
-        idx++;
-    }
+  
 
 }
 
@@ -42,6 +37,14 @@ CombinedRenderer.prototype = {
 
         CombinedRenderer.requestAnimationFrame(function step() {
 
+            var idx = 0;
+
+            while (idx < that.layouts.length) {
+                if (that.layouts[idx].layout.graph.eventListeners.length == 0)
+                    that.layouts[idx].layout.graph.addGraphListener(that);
+
+                idx++;
+            }
 
             var idx = 0;
             var energyCount = 0;

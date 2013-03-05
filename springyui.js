@@ -45,116 +45,6 @@ OTHER DEALINGS IN THE SOFTWARE.
         var year = 1660;
 
 
-
-        var myVar = setInterval(function () { myTimer() }, 3000);
-
-        function myTimer() {
-
-            $('#map_year').html(year);
-
-
-            tree.populateGraph(year, graph);
-
-            year += 5;
-            if (year == '2000') myStopFunction();
-        }
-
-
-        function myStopFunction() {
-            clearInterval(myVar);
-        }
-
-
-
-        $('body').css("background-color", colourScheme.mapbackgroundColour);
-
-
-
-        var layout = this.layout = new Layout.ForceDirected(graph, new mapHandler(colourScheme, 1500, 1000), stiffness, repulsion, damping);
-
-        //   if (edge.data.type == 'data') return;
-
-        var infoGraph = new Graph();
-
-        var anchorNode = infoGraph.newNode({ label: 'centre', type: 'infonode' });
-
-        var nameNode = infoGraph.newNode({ label: 'name', type: 'infonode' });
-
-        infoGraph.newEdge(anchorNode, nameNode, { type: 'data' });
-
-        var dobNode = infoGraph.newNode({ label: 'dob', type: 'infonode' });
-
-        infoGraph.newEdge(anchorNode, dobNode, { type: 'data' });
-
-        var placeNode = infoGraph.newNode({ label: 'place', type: 'infonode' });
-
-        infoGraph.newEdge(anchorNode, placeNode, { type: 'data' });
-
-
-        var infoLayout = this.infoLayout = new Layout.ForceDirected(infoGraph, new mapHandler(colourScheme, 400, 400), stiffness, repulsion, damping);
-
-
-
-        var _dir = '';
-
-        // auto adjusting bounding box
-        Layout.requestAnimationFrame(function adjust() {
-
-            if (_dir != '') {
-                console.log(_dir);
-            }
-
-            layout.mapHandler.adjustPosition(_dir);
-
-            infoLayout.mapHandler.adjustPosition(_dir);
-
-            Layout.requestAnimationFrame(adjust);
-        });
-
-
-        jQuery(canvas).mousedown(function (e) {
-            $.proxy(layout.mouseDown(e), layout);
-            $.proxy(infoLayout.mouseDown(e), infoLayout);
-
-            combinedRenderer.start();
-        }).mouseup(function () {
-            layout.mouseUp();
-            infoLayout.mouseUp();
-        });
-
-        $(".button_box").mousedown(function (evt) {
-            console.log('button mouse down');
-
-            //mouseup = false;
-
-            if (evt.target.id == "up") _dir = 'UP';
-            if (evt.target.id == "dn") _dir = 'DOWN';
-            if (evt.target.id == "we") _dir = 'WEST';
-            if (evt.target.id == "no") _dir = 'NORTH';
-            if (evt.target.id == "es") _dir = 'EAST';
-            if (evt.target.id == "so") _dir = 'SOUTH';
-            if (evt.target.id == "de") _dir = 'DEBUG';
-
-        }).mouseup(function () {
-            //mouseup = true;
-            _dir = '';
-        });
-
-
-        jQuery(canvas).mousemove(function (e) {
-            $.proxy(layout.mouseMove(e), layout);
-            $.proxy(infoLayout.mouseMove(e), infoLayout);
-            combinedRenderer.start();
-        });
-
-
-
-
-
-
-
-
-
         var clearFunction = function (map) {
             // var map = this.map;
             ctx.clearRect(0, 0, map.graph_width, map.graph_height);
@@ -304,25 +194,165 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 
-        var renderers = [];
+        var myVar = setInterval(function () { myTimer() }, 3000);
 
-        renderers.push({ layout: layout, edges: drawEdges, nodes: drawNodes });
-        renderers.push({ layout: infoLayout, edges: drawEdges, nodes: drawNodes });
+        var layoutList = new Array();
+
+        var added = false;
+
+        function myTimer() {
+
+            $('#map_year').html(year);
 
 
-        var combinedRenderer = new CombinedRenderer(clearFunction, renderers);
+            tree.populateGraph(year, graph);
+
+            if (tree.data.Generations[1][0].nodeLink) {
+                if(!added)
+                    layoutList.push({ layout: createSubLayout(tree.data.Generations[1][0].nodeLink), edges: drawEdges, nodes: drawNodes });
+
+                added = true;
+            }
+
+             
+            year += 5;
+            if (year == '2000') myStopFunction();
+        }
+
+
+        function myStopFunction() {
+            clearInterval(myVar);
+        }
+
+
+
+        $('body').css("background-color", colourScheme.mapbackgroundColour);
+
+
+
+        var _layout = this.layout = new Layout.ForceDirected(graph, new mapHandler(colourScheme, 1500, 1000), stiffness, repulsion, damping);
+
+        //layoutList.push(layout);
+
+        layoutList.push({ layout: _layout, edges: drawEdges, nodes: drawNodes });
+
+        var createSubLayout = function (entry) {
+
+            var infoGraph = new Graph();
+
+            if (entry.data.person.Name != '') {
+                var nameNode = infoGraph.newNode({
+                    label: 'Name:' + entry.data.person.Name,
+                    parentId: entry.data.person.PersonId,
+                    type: 'infonode'
+                });
+
+                infoGraph.newEdge(entry, nameNode, { type: 'data', directional: false });
+            }
+
+            if (entry.data.person.DOB != '') {
+                var dobNode = infoGraph.newNode({
+                    label: 'DOB:' + entry.data.person.DOB,
+                    parentId: entry.data.person.PersonId,
+                    type: 'infonode'
+                });
+
+                infoGraph.newEdge(entry, dobNode, { type: 'data', directional: false });
+            }
+
+            if (entry.data.person.DOD != '') {
+                var dodNode = infoGraph.newNode({
+                    label: 'DOD:' + entry.data.person.DOD,
+                    parentId: entry.data.person.PersonId,
+                    type: 'infonode'
+                });
+
+                infoGraph.newEdge(entry, dodNode, { type: 'data', directional: false });
+            }
+
+            if (entry.data.person.BirthLocation != '') {
+                var blocNode = infoGraph.newNode({
+                    label: 'Birth Location:' + entry.data.person.BirthLocation,
+                    parentId: entry.data.person.PersonId,
+                    type: 'infonode'
+                });
+
+                infoGraph.newEdge(entry, blocNode, { type: 'data', directional: false });
+            }
+
+            if (entry.data.person.DeathLocation != '') {
+                var dlocNode = infoGraph.newNode({
+                    label: 'Death Location:' + entry.data.person.DeathLocation,
+                    parentId: entry.data.person.PersonId,
+                    type: 'infonode'
+                });
+
+                infoGraph.newEdge(entry, dlocNode, { type: 'data', directional: false });
+            }
+
+            return new Layout.ForceDirected(infoGraph, new mapHandler(colourScheme, 400, 400), stiffness, repulsion, damping, entry);
+
+
+        };
+
+
+
+        var _dir = '';
+
+        // auto adjusting bounding box
+        Layout.requestAnimationFrame(function adjust() {
+            layoutList.forEach(function (value, index, ar) {
+                value.layout.mapHandler.adjustPosition(_dir);
+            });
+            Layout.requestAnimationFrame(adjust);
+        });
+
+
+        jQuery(canvas).mousedown(function (e) {
+             
+            layoutList.forEach(function (value, index, ar) {
+                $.proxy(value.layout.mouseDown(e), value);
+            });
+
+
+            combinedRenderer.start();
+        }).mouseup(function () {
+            
+            layoutList.forEach(function (value, index, ar) {
+                value.layout.mouseUp();
+            });
+        });
+
+        $(".button_box").mousedown(function (evt) {
+            console.log('button mouse down');
+
+            //mouseup = false;
+
+            if (evt.target.id == "up") _dir = 'UP';
+            if (evt.target.id == "dn") _dir = 'DOWN';
+            if (evt.target.id == "we") _dir = 'WEST';
+            if (evt.target.id == "no") _dir = 'NORTH';
+            if (evt.target.id == "es") _dir = 'EAST';
+            if (evt.target.id == "so") _dir = 'SOUTH';
+            if (evt.target.id == "de") _dir = 'DEBUG';
+
+        }).mouseup(function () {
+            //mouseup = true;
+            _dir = '';
+        });
+
+
+        jQuery(canvas).mousemove(function (e) {
+         
+            layoutList.forEach(function (value, index, ar) {
+                $.proxy(value.layout.mouseMove(e), value);
+            });
+            combinedRenderer.start();
+        });
+
+        var combinedRenderer = new CombinedRenderer(clearFunction, layoutList);
 
         combinedRenderer.start();
-
-
-        //        var renderer = new Renderer(1, layout,
-        //            clearFunction, drawEdges, drawNodes);
-
-        //        renderer.start();
-
-
-
-
 
         return this;
     }
