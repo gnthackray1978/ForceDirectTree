@@ -256,6 +256,19 @@ mapHandler.prototype = {
 
             this.UpdatePosition(_dir);
         }
+        else {
+            if (this.layout.parentNode && this.layout.firstNode) {
+                var distance = this.layout.parentLayout.nodePoints[this.layout.parentNode.id].p.subtract(this.layout.nodePoints[this.layout.firstNode.id].p);
+
+                var x1 = this.layout.parentLayout.nodePoints[this.layout.parentNode.id].p.x;
+                var y1 = this.layout.parentLayout.nodePoints[this.layout.parentNode.id].p.y;
+
+            //    console.log(x1 + ',' + y1);
+
+                this.centrePoint = 500;
+                this.centreVerticalPoint = 500;
+            }
+        }
 
     }
 

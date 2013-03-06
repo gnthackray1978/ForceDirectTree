@@ -155,6 +155,10 @@ OTHER DEALINGS IN THE SOFTWARE.
 
         var drawNodes = function (map, node, p) {
 
+            // get parent node location if there is a parent node
+
+
+
             //       if (node.data.type != undefined && node.data.type == 'infonode') return;
 
             //  var map = this.map;
@@ -230,15 +234,21 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 
 
-        var _layout = this.layout = new Layout.ForceDirected(graph, new mapHandler(colourScheme, 1500, 1000), stiffness, repulsion, damping);
+        var parentLayout = this.layout = new Layout.ForceDirected(graph, new mapHandler(colourScheme, 1500, 1000), stiffness, repulsion, damping);
 
         //layoutList.push(layout);
 
-        layoutList.push({ layout: _layout, edges: drawEdges, nodes: drawNodes });
+        layoutList.push({ layout: parentLayout, edges: drawEdges, nodes: drawNodes });
 
         var createSubLayout = function (entry) {
 
             var infoGraph = new Graph();
+
+            var centreNode = infoGraph.newNode({
+                label: '',
+                parentId: entry.data.person.PersonId,
+                type: 'infonode'
+            });
 
             if (entry.data.person.Name != '') {
                 var nameNode = infoGraph.newNode({
@@ -247,7 +257,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                     type: 'infonode'
                 });
 
-                infoGraph.newEdge(entry, nameNode, { type: 'data', directional: false });
+                infoGraph.newEdge(centreNode, nameNode, { type: 'data', directional: false });
             }
 
             if (entry.data.person.DOB != '') {
@@ -257,7 +267,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                     type: 'infonode'
                 });
 
-                infoGraph.newEdge(entry, dobNode, { type: 'data', directional: false });
+                infoGraph.newEdge(centreNode, dobNode, { type: 'data', directional: false });
             }
 
             if (entry.data.person.DOD != '') {
@@ -267,7 +277,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                     type: 'infonode'
                 });
 
-                infoGraph.newEdge(entry, dodNode, { type: 'data', directional: false });
+                infoGraph.newEdge(centreNode, dodNode, { type: 'data', directional: false });
             }
 
             if (entry.data.person.BirthLocation != '') {
@@ -277,7 +287,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                     type: 'infonode'
                 });
 
-                infoGraph.newEdge(entry, blocNode, { type: 'data', directional: false });
+                infoGraph.newEdge(centreNode, blocNode, { type: 'data', directional: false });
             }
 
             if (entry.data.person.DeathLocation != '') {
@@ -287,10 +297,10 @@ OTHER DEALINGS IN THE SOFTWARE.
                     type: 'infonode'
                 });
 
-                infoGraph.newEdge(entry, dlocNode, { type: 'data', directional: false });
+                infoGraph.newEdge(centreNode, dlocNode, { type: 'data', directional: false });
             }
 
-            return new Layout.ForceDirected(infoGraph, new mapHandler(colourScheme, 400, 400), stiffness, repulsion, damping, entry);
+            return new Layout.ForceDirected(infoGraph, new mapHandler(colourScheme, 400, 400), stiffness, repulsion, damping, entry, parentLayout, centreNode);
 
 
         };
