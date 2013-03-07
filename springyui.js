@@ -211,9 +211,9 @@ OTHER DEALINGS IN THE SOFTWARE.
 
             tree.populateGraph(year, graph);
 
-            if (tree.data.Generations[1][0].nodeLink) {
+            if (tree.data.Generations[2][0].nodeLink) {
                 if(!added)
-                    layoutList.push({ layout: createSubLayout(tree.data.Generations[1][0].nodeLink), edges: drawEdges, nodes: drawNodes });
+                    layoutList.push({ layout: createSubLayout(tree.data.Generations[2][0].nodeLink), edges: drawEdges, nodes: drawNodes });
 
                 added = true;
             }
@@ -300,7 +300,7 @@ OTHER DEALINGS IN THE SOFTWARE.
                 infoGraph.newEdge(centreNode, dlocNode, { type: 'data', directional: false });
             }
 
-            return new Layout.ForceDirected(infoGraph, new mapHandler(colourScheme, 400, 400), stiffness, repulsion, damping, entry, parentLayout, centreNode);
+            return new Layout.ForceDirected(infoGraph, new mapHandler(colourScheme, 200, 200), stiffness, repulsion, damping, entry, parentLayout, centreNode);
 
 
         };

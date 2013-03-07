@@ -258,15 +258,26 @@ mapHandler.prototype = {
         }
         else {
             if (this.layout.parentNode && this.layout.firstNode) {
-                var distance = this.layout.parentLayout.nodePoints[this.layout.parentNode.id].p.subtract(this.layout.nodePoints[this.layout.firstNode.id].p);
+                var firstNodePoint = this.layout.nodePoints[this.layout.firstNode.id].p;
 
-                var x1 = this.layout.parentLayout.nodePoints[this.layout.parentNode.id].p.x;
-                var y1 = this.layout.parentLayout.nodePoints[this.layout.parentNode.id].p.y;
 
-            //    console.log(x1 + ',' + y1);
+                var currentUtils = new Utils(this.currentBB, this.graph_width, this.graph_height);
 
-                this.centrePoint = 500;
-                this.centreVerticalPoint = 500;
+                var screenFirstNode = currentUtils.toScreen(firstNodePoint);
+
+                var parentMapHandler = this.layout.parentLayout.mapHandler;
+
+                var parentUtils = new Utils(parentMapHandler.currentBB, parentMapHandler.graph_width, parentMapHandler.graph_height);
+
+
+                var parentPoint = this.layout.parentLayout.nodePoints[this.layout.parentNode.id].p;
+
+                var screenParentNode = parentUtils.toScreen(parentPoint);
+
+                // add parentlayout centre points !
+                this.centrePoint = parentMapHandler.centrePoint + screenParentNode.x - screenFirstNode.x;// (this.graph_width / 2);
+
+                this.centreVerticalPoint = parentMapHandler.centreVerticalPoint + screenParentNode.y -screenFirstNode.y;// (this.graph_height / 2);
             }
         }
 
