@@ -205,12 +205,12 @@ mapHandler.prototype = {
         var p = utils.fromScreen({ x: (e.pageX - this.centrePoint) - pos.left, y: (e.pageY - this.centreVerticalPoint) - pos.top });
         return p;
     },
+    
     currentPositionToScreen: function (pos, e) {
         var utils = new Utils(this.currentBB, this.graph_width, this.graph_height);
         var p = utils.toScreen({ x: (e.pageX - this.centrePoint) - pos.left, y: (e.pageY - this.centreVerticalPoint) - pos.top });
         return p;
     },
-
 
     addToMouseQueue: function (x, y) {
         var _point = new Array(x, y);
@@ -231,6 +231,7 @@ mapHandler.prototype = {
 
         return validDraw;
     },
+    
     mapOffset: function (v1) {
 
         v1.x += this.centrePoint;
@@ -275,191 +276,94 @@ mapHandler.prototype = {
                 var screenParentNode = parentUtils.toScreen(parentPoint);
 
                 // add parentlayout centre points !
-                this.centrePoint = parentMapHandler.centrePoint + screenParentNode.x - screenFirstNode.x;// (this.graph_width / 2);
+                this.centrePoint = parentMapHandler.centrePoint + screenParentNode.x - screenFirstNode.x; // (this.graph_width / 2);
 
-                this.centreVerticalPoint = parentMapHandler.centreVerticalPoint + screenParentNode.y -screenFirstNode.y;// (this.graph_height / 2);
+                this.centreVerticalPoint = parentMapHandler.centreVerticalPoint + screenParentNode.y - screenFirstNode.y; // (this.graph_height / 2);
             }
         }
 
+    },
+
+    onscreenNodes: function (maxnumber) {
+
+        var that = this;
+        var countonscreen = 0;
+        var onscreenNodes = new Array();
+        var offscreenNodes = new Array();
+        var maxNodes = false;
+
+
+        //console.log('debug');
+
+        this.layout.eachNode(function (node, point) {
+
+            //console.log(node.data.label);
+            var _utils = new Utils(that.currentBB, that.graph_width, that.graph_height);
+
+            var x1 = that.mapOffset(_utils.toScreen(point.p)).x;
+            var y1 = that.mapOffset(_utils.toScreen(point.p)).y;
+
+            if (that.validToDraw(x1, y1, 0)) {
+
+                if (countonscreen <= maxnumber)
+                    onscreenNodes.push(node);
+
+                if (node.data.type == 'normal')
+                    countonscreen++;
+
+
+            }
+            else {
+
+                if (!that.validToDraw(x1, y1, 2000)) {
+                    if (node.data.type == 'normal')
+                        offscreenNodes.push(node);
+                }
+            }
+
+
+
+            // console.log(node.data.label + ' - ' + x1 + ' ' + y1);
+        });
+
+        // if there are more nodes on the screen than the max allowed then we arent interested
+        if (countonscreen > maxnumber) onscreenNodes = [];
+
+        return onscreenNodes;
+    },
+
+    countOnscreenNodes: function () {
+
+        var that = this;
+        var countonscreen = 0;
+        var onscreenNodes = new Array();
+        var offscreenNodes = new Array();
+        var maxNodes = false;
+
+        this.layout.eachNode(function (node, point) {
+
+            //console.log(node.data.label);
+            var _utils = new Utils(that.currentBB, that.graph_width, that.graph_height);
+
+            var x1 = that.mapOffset(_utils.toScreen(point.p)).x;
+            var y1 = that.mapOffset(_utils.toScreen(point.p)).y;
+
+            if (that.validToDraw(x1, y1, 0)) {
+                onscreenNodes.push(node);
+                if (node.data.type == 'normal')
+                    countonscreen++;
+            }
+            else {
+                if (!that.validToDraw(x1, y1, 2000)) {
+                    if (node.data.type == 'normal')
+                        offscreenNodes.push(node);
+                }
+            }
+
+        });
+
+        return countonscreen;
     }
-
-
-    // onscreenNodes: function (maxnumber) {
-
-    //        var that = this;
-    //        var countonscreen = 0;
-    //        var onscreenNodes = new Array();
-    //        var offscreenNodes = new Array();
-    //        var maxNodes = false;
-
-
-    //        //console.log('debug');
-
-    //        this.layout.eachNode(function (node, point) {
-
-    //            //console.log(node.data.label);
-    //            var _utils = new Utils(that.currentBB, that.graph_width, that.graph_height);
-
-    //            var x1 = that.mapOffset(_utils.toScreen(point.p)).x;
-    //            var y1 = that.mapOffset(_utils.toScreen(point.p)).y;
-
-    //            if (that.validToDraw(x1, y1, 0)) {
-
-
-    //                onscreenNodes.push(node);
-
-    //                if (node.data.type == 'normal')
-    //                    countonscreen++;
-
-
-    //            }
-    //            else {
-
-    //                if (!that.validToDraw(x1, y1, 2000)) {
-    //                    if (node.data.type == 'normal')
-    //                        offscreenNodes.push(node);
-    //                }
-    //            }
-
-    //            if (countonscreen > maxnumber) {
-    //                maxNodes = true;
-
-    //            }
-
-    //            // console.log(node.data.label + ' - ' + x1 + ' ' + y1);
-    //        });
-
-
-    //  if (!maxNodes) {
-    // add onscreen nodes
-    //            onscreenNodes.forEach(function (entry) {
-    //                // console.log(entry.data.label);
-
-    //                if (entry.data.person != undefined) {
-
-    //                    // if info hasnt already been display for this person
-    //                    if ($.inArray(entry.data.person.PersonId, that.infoDisplayed) < 0) {
-
-    //                        that.infoDisplayed.push(entry.data.person.PersonId);
-
-    //                        //console.log('adding ' + entry.data.person.Name + ' ' + that.infoDisplayed.length);
-
-    //                        if (entry.data.person.Name != '') {
-
-    //                            var nameNode = that.layout.graph.newNode({
-    //                                label: entry.data.person.Name,
-    //                                parentId: entry.data.person.PersonId,
-    //                                type: 'infonode'
-    //                            });
-
-    //                          
-
-    //                            that.layout.graph.newEdge(entry, nameNode, { type: 'data', directional: false });
-
-
-    //                        }
-
-    ////                        if (entry.data.person.DOB != '') {
-    ////                            var dobNode = that.layout.graph.newNode({
-    ////                                label: 'dob: ' + entry.data.person.DOB,
-    ////                                parentId: entry.data.person.PersonId,
-    ////                                type: 'infonode'
-    ////                            });
-
-    ////                            that.layout.nodePoints[dobNode.id] = new Layout.ForceDirected.Point(that.layout.point(entry).p, that.layout.point(entry).m);
-    ////                            // that.layout.nodePoints[dobNode.id].v = new Vector(0.001, 0.001);
-    ////                            //  that.layout.nodePoints[dobNode.id].a = new Vector(0.1, 0.1);
-    ////                            that.layout.nodePoints[dobNode.id].p.x += 100;
-    ////                            that.layout.nodePoints[dobNode.id].p.y -= 100;
-    ////                            that.layout.graph.newEdge(entry, dobNode, { type: 'data', directional: false });
-    ////                        }
-
-    //                        //                        if (entry.data.person.DOD != '') {
-    //                        //                            var dodNode = that.layout.graph.newNode({
-    //                        //                                label: 'dod:' + entry.data.person.DOD,
-    //                        //                                parentId: entry.data.person.PersonId,
-    //                        //                                type: 'infonode'
-    //                        //                            });
-
-    //                        //                            //      that.layout.nodePoints[dodNode.id] = new Layout.ForceDirected.Point(that.layout.point(entry).p, that.layout.point(entry).m);
-    //                        //                            //   that.layout.nodePoints[dodNode.id].v = new Vector(-0.001, 0.001);
-    //                        //                            //  that.layout.nodePoints[dodNode.id].a = new Vector(-0.1, 0.1);
-    //                        //                            //                            that.layout.nodePoints[dodNode.id].p.x -= 10;
-    //                        //                            //                            that.layout.nodePoints[dodNode.id].p.y += 10;
-    //                        //                            that.layout.graph.newEdge(entry, dodNode, { type: 'data', directional: false });
-    //                        //                        }
-
-    //                        //                        if (entry.data.person.BirthLocation != '') {
-    //                        //                            var birthNode = that.layout.graph.newNode({
-    //                        //                                label: 'born: ' + entry.data.person.BirthLocation,
-    //                        //                                parentId: entry.data.person.PersonId,
-    //                        //                                type: 'infonode'
-    //                        //                            });
-
-    //                        //                            //      that.layout.nodePoints[birthNode.id] = new Layout.ForceDirected.Point(that.layout.point(entry).p, that.layout.point(entry).m);
-    //                        //                            // that.layout.nodePoints[birthNode.id].v = new Vector(0.001, -0.001);
-    //                        //                            // that.layout.nodePoints[birthNode.id].a = new Vector(0.1, -0.1);
-    //                        //                            //                            that.layout.nodePoints[birthNode.id].p.x += 10;
-    //                        //                            //                            that.layout.nodePoints[birthNode.id].p.y -= 10;
-    //                        //                            that.layout.graph.newEdge(entry, birthNode, { type: 'data', directional: false });
-    //                        //                        }
-
-    //                        //                        if (entry.data.person.DeathLocation != '') {
-    //                        //                            var deathNode = that.layout.graph.newNode({
-    //                        //                                label: 'died: ' + entry.data.person.DeathLocation,
-    //                        //                                parentId: entry.data.person.PersonId,
-    //                        //                                type: 'infonode'
-    //                        //                            });
-
-    //                        //                            //     that.layout.nodePoints[deathNode.id] = new Layout.ForceDirected.Point(that.layout.point(entry).p, that.layout.point(entry).m);
-    //                        //                            //  that.layout.nodePoints[deathNode.id].v = new Vector(-0.001, -0.001);
-    //                        //                            //  that.layout.nodePoints[deathNode.id].a = new Vector(-0.1, -0.1);
-    //                        //                            //                            that.layout.nodePoints[deathNode.id].p.x += 10;
-    //                        //                            //                            that.layout.nodePoints[deathNode.id].p.y -= 10;
-    //                        //                            that.layout.graph.newEdge(entry, deathNode, { type: 'data', directional: false });
-    //                        //                        }
-    //                    }
-    //                }
-    //            });
-
-    //            // delete offscreen nodes
-    //            offscreenNodes.forEach(function (entry) {
-    // is there an entry for this person in the infodisplayed array
-    //                that.layout.eachNode(function (node, point) {
-
-    //                    if (node.data.parentId != undefined &&
-    //                            node.data.parentId == entry.data.person.PersonId) {
-    //                        // then remove node from nodes list
-    //                        that.layout.graph.removeNode(node);
-    //                    }
-    //                });
-    // person will be undefined for infonode nodes and they wont have an entry in the infodisplayed array anyway.
-    //                if (entry.data.person != undefined) {
-    //                    var aloc = $.inArray(entry.data.person.PersonId, that.infoDisplayed);
-
-    //                    // if so delete it
-    //                    if (aloc >= 0) {
-    //                        that.infoDisplayed.splice(aloc, 1);
-    //                    }
-    //                }
-    //  });
-    //     }
-    //        else {
-
-    //            that.infoDisplayed = new Array();
-
-    //            // ok so just delete all the information nodes
-    //            // because we're zoomed too far out
-    //            that.layout.eachNode(function (node, point) {
-
-    //                if (node.data.type != 'normal')
-    //                    that.layout.graph.removeNode(node);
-    //            });
-    //        }
-
-    //       return countonscreen;
-    //}
-
 
 };
 

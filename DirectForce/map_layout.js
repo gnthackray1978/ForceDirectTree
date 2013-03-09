@@ -216,7 +216,7 @@ Layout.ForceDirected.prototype = {
             var selectedPersonId = '';
             var nodePersonId = '';
 
-            if (this.selected != null && this.selected.node != undefined && this.selected.node.data != undefined) {
+            if (this.selected != null && this.selected.node != undefined && this.selected.node.data != undefined && this.selected.node.data.person  !=undefined) {
                 selectedPersonId = this.selected.node.data.person.PersonId;
             }
 
@@ -224,7 +224,7 @@ Layout.ForceDirected.prototype = {
                 nodePersonId = node.data.person.PersonId;
             }
 
-            if (selectedPersonId == nodePersonId) {
+            if (selectedPersonId == nodePersonId && node.data.type != 'infonode') {
                 return 3;
             }
             else if (this.nearest !== null && this.nearest.node !== null && this.nearest.node.id === node.id) {
